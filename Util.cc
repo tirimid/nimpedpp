@@ -9,6 +9,19 @@ extern "C"
 #include <sys/stat.h>
 }
 
+void  Info(const char* fmt, ...)
+{
+  va_list args;
+  va_start(args, fmt);
+  
+  char  msg[512]  = "info: ";
+  vsnprintf(&msg[5], sizeof(msg) - 6, fmt, args);
+  
+  // TODO: either display in editor or terminal
+  
+  va_end(args);
+}
+
 void  Error(const char* fmt, ...)
 {
   va_list args;
@@ -37,4 +50,9 @@ u64 FileID(const char* path, bool dereference)
   }
   
   return (pathStat.st_ino);
+}
+
+void  CreateFile(const char* path)
+{
+  // TODO: implement
 }

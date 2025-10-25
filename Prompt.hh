@@ -5,7 +5,7 @@
 #include <Encoding.hh>
 #include <Util.hh>
 
-enum PromptStatus
+enum PromptStatus : u8
 {
   PROMPT_NONE = 0,
   PROMPT_FAIL,
@@ -18,8 +18,6 @@ struct Prompt
   u32           m_Start   {};
   i32           m_Cursor  {};
   PromptStatus  m_Status  {};
-  
-  Prompt();
 };
 
 extern Prompt g_Prompt;

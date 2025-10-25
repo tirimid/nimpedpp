@@ -4,7 +4,6 @@
 
 #include <Encoding.hh>
 #include <Util.hh>
-#include <vector>
 
 enum LangMode
 {
@@ -63,44 +62,47 @@ struct Color
 struct DynamicOptions
 {
   // layout options
-  u32               m_MasterNumer;
-  u32               m_MasterDenom;
-  u32               m_LeftGutter;
-  u32               m_RightGutter;
-  std::vector<u32>  m_Margins;
-  u32               m_TabSize;
+  u32         m_MasterNumer;
+  u32         m_MasterDenom;
+  u32         m_LeftGutter;
+  u32         m_RightGutter;
+  u32*        m_Margins;
+  usize       m_NMargins;
+  u32         m_TabSize;
   
   // editor color options
-  Color m_Global;
-  Color m_Window;
-  Color m_CurrentWindow;
-  Color m_Normal;
-  Color m_LineNumber;
-  Color m_LineNumberHighlight;
-  Color m_Margin;
-  Color m_Cursor;
-  Color m_GlobalCursor;
+  Color       m_Global;
+  Color       m_Window;
+  Color       m_CurrentWindow;
+  Color       m_Normal;
+  Color       m_LineNumber;
+  Color       m_LineNumberHighlight;
+  Color       m_Margin;
+  Color       m_Cursor;
+  Color       m_GlobalCursor;
   
   // highlight color options
-  Color m_Comment;
-  Color m_Macro;
-  Color m_Special;
-  Color m_Keyword;
-  Color m_Primitive;
-  Color m_Type;
-  Color m_Emphasis;
-  Color m_String;
-  Color m_Number;
+  Color       m_Comment;
+  Color       m_Macro;
+  Color       m_Special;
+  Color       m_Keyword;
+  Color       m_Primitive;
+  Color       m_Type;
+  Color       m_Emphasis;
+  Color       m_String;
+  Color       m_Number;
   
   // editing options
-  bool  m_TabSpaces;
+  bool        m_TabSpaces;
   
   // language mode options
   struct
   {
-    std::vector<EString>  m_Keywords;
-    std::vector<EString>  m_Primitives;
-  } m_Lang[LANG_MODE_END];
+    EString*  m_Keywords;
+    usize     m_NKeywords;
+    EString*  m_Primitives;
+    usize     m_NPrimitives;
+  }           m_Lang[LANG_MODE_END];
 };
 
 constexpr InternalOptions   INTERNAL;

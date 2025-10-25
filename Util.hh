@@ -26,5 +26,7 @@ using usize = size_t;
 using f32   = float;
 using f64   = double;
 
+void  Info(const char* fmt, ...);
 void  Error(const char* fmt, ...);
 u64   FileID(const char* path, bool dereference);
+void  CreateFile(const char* path);

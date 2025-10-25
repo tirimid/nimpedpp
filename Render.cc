@@ -48,11 +48,11 @@ i32 InitRender()
   
   struct winsize  winSize {};
   ioctl(0, TIOCGWINSZ, &winSize);
-  g_Width   = winSize.ws_col;
-  g_Height  = winSize.ws_row;
+  g_Width = winSize.ws_col;
+  g_Height = winSize.ws_row;
   
-  g_CellChars       = (EChar*)calloc(g_Width * g_Height, sizeof(EChar));
-  g_CellAttributes  = (Attributes*)calloc(g_Width * g_Height, sizeof(Attributes));
+  g_CellChars = (EChar*)calloc(g_Width * g_Height, sizeof(EChar));
+  g_CellAttributes = (Attributes*)calloc(g_Width * g_Height, sizeof(Attributes));
   
   struct sigaction  sigAction {};
   sigaction(SIGWINCH, nullptr, &sigAction);
@@ -129,7 +129,7 @@ void  RenderFill(EChar ch, Attributes a, u32 x, u32 y, u32 w, u32 h)
   {
     for (u32 cy = y; cy < y + h; ++cy)
     {
-      g_CellChars[g_Width * cy + cx]      = ch;
+      g_CellChars[g_Width * cy + cx] = ch;
       g_CellAttributes[g_Width * cy + cx] = a;
     }
   }
@@ -162,23 +162,24 @@ void  RenderPut(EChar ch, Attributes a, u32 x, u32 y)
     return;
   }
   
-  g_CellChars[g_Width * y + x]      = ch;
+  g_CellChars[g_Width * y + x] = ch;
   g_CellAttributes[g_Width * y + x] = a;
 }
 
 void  RenderGet(OUT EChar& ch, u32 x, u32 y)
 {
-  // TODO: implement
+  ch = g_CellChars[g_Width * y + x];
 }
 
 void  RenderGet(OUT Attributes& a, u32 x, u32 y)
 {
-  // TODO: implement
+  a = g_CellAttributes[g_Width * y + x];
 }
 
 void  RenderGet(OUT EChar& ch, OUT Attributes& a, u32 x, u32 y)
 {
-  // TODO: implement
+  ch = g_CellChars[g_Width * y + x];
+  a = g_CellAttributes[g_Width * y + x];
 }
 
 void  RenderPresent()
@@ -272,7 +273,7 @@ static void SIGWINCHHandler(int arg)
   struct winsize  winSize {};
   ioctl(0, TIOCGWINSZ, &winSize);
   
-  g_Width   = winSize.ws_col;
-  g_Height  = winSize.ws_row;
+  g_Width = winSize.ws_col;
+  g_Height = winSize.ws_row;
   RenderBar(g_Bar); // recompute bar
 }

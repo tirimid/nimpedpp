@@ -6,4 +6,6 @@ DynamicOptions  g_Options;
 
 i32 ParseOptions()
 {
+  // TODO: implement
+  return (1);
 }
