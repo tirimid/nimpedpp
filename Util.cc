@@ -52,7 +52,12 @@ u64 FileID(const char* path, bool dereference)
   return (pathStat.st_ino);
 }
 
-void  CreateFile(const char* path)
+i32 RecursiveCreateDir(const char* path)
+{
+  // TODO: implement
+}
+
+i32 CreateFile(const char* path)
 {
   // TODO: implement
 }

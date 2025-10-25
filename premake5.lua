@@ -2,7 +2,7 @@ workspace "nimped++"
   configurations {"Debug", "Release"}
   
   project "nimped++"
-    kind "WindowedApp"
+    kind "ConsoleApp"
     
     language "C++"
     cppdialect "C++20"
@@ -13,12 +13,6 @@ workspace "nimped++"
     includedirs "."
     
     warnings "Extra"
-    
-    filter "system:linux"
-      buildoptions {"`pkg-config --cflags sdl2 SDL2_ttf`"}
-      linkoptions {"`pkg-config --libs sdl2 SDL2_ttf`"}
-    
-    -- Windows support needs to be considered
     
     filter "configurations:Debug"
       runtime "Debug"

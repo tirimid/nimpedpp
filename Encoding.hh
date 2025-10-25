@@ -32,6 +32,7 @@ struct EString
   
   char* ToCString();
   void  Free();
+  void  Append(EChar ch);
   
   EString();
   EString(const char* cString);

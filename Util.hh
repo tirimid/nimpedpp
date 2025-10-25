@@ -29,4 +29,5 @@ using f64   = double;
 void  Info(const char* fmt, ...);
 void  Error(const char* fmt, ...);
 u64   FileID(const char* path, bool dereference);
-void  CreateFile(const char* path);
+i32   RecursiveCreateDir(const char* path);
+i32   CreateFile(const char* path);

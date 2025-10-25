@@ -33,6 +33,8 @@ struct FunctionalOptions
   const char* EDITING_CONF      = "editing.conf";
   usize       MAX_BAR_LENGTH    = 512;
   usize       MAX_PROMPT_LENGTH = 512;
+  usize       MAX_BIND_LENGTH   = 16;
+  usize       MAX_BINDS         = 128;
 };
 
 struct FrameOptions

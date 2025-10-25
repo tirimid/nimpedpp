@@ -223,6 +223,11 @@ void  EString::Free()
   m_Capacity  = 0;
 }
 
+void  EString::Append(EChar ch)
+{
+  // TODO: implement EString::Append()
+}
+
 EString::EString()
 {
 }
