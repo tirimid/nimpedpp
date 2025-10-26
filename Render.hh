@@ -3,12 +3,16 @@
 #pragma once
 
 #include <Encoding.hh>
+#include <Options.hh>
 #include <Util.hh>
 
 struct Attributes
 {
-  u8  m_FG;
-  u8  m_BG;
+  u8  m_FG  {};
+  u8  m_BG  {};
+  
+  Attributes();
+  Attributes(Color color);
 };
 
 i32   InitRender();

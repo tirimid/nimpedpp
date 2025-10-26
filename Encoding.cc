@@ -5,7 +5,7 @@
 #include <cstring>
 #include <Encoding.hh>
 
-bool  EChar::IsPrint()
+bool  EChar::IsPrint() const
 {
   if (m_Codepoint <= 0x1f
     || (m_Codepoint >= 0x7f && m_Codepoint <= 0x9f)
@@ -25,7 +25,7 @@ bool  EChar::IsPrint()
   }
 }
 
-bool  EChar::IsSpace()
+bool  EChar::IsSpace() const
 {
   if ((m_Codepoint >= 0x9 && m_Codepoint <= 0xd)
     || m_Codepoint == 0x20
@@ -46,7 +46,7 @@ bool  EChar::IsSpace()
   }
 }
 
-bool  EChar::IsAlpha()
+bool  EChar::IsAlpha() const
 {
   // some writing systems are not included
   if ((m_Codepoint >= 0x41 && m_Codepoint <= 0x5a)
@@ -75,7 +75,7 @@ bool  EChar::IsAlpha()
   }
 }
 
-bool  EChar::IsDigit()
+bool  EChar::IsDigit() const
 {
   if ((m_Codepoint >= 0x30 && m_Codepoint <= 0x39)
     || (m_Codepoint >= 0x2160 && m_Codepoint <= 0x2188)
@@ -94,12 +94,12 @@ bool  EChar::IsDigit()
   }
 }
 
-bool  EChar::IsAlnum()
+bool  EChar::IsAlnum() const
 {
   return (IsAlpha() || IsDigit());
 }
 
-usize EChar::EncodingLength()
+usize EChar::EncodingLength() const
 {
   usize length  = !!m_Encoding[0] + !!m_Encoding[1] + !!m_Encoding[2] + !!m_Encoding[3];
   return (length);
@@ -188,7 +188,7 @@ EChar::EChar(const u8* ptr)
   }
 }
 
-char* EString::ToCString()
+char* EString::ToCString() const
 {
   // first allocate too much memory, then reallocate to the appropriate amount; calloc() used so allocated memory is zeroed
   char* cString = (char*)calloc(m_Length + 1, sizeof(EChar));
@@ -223,9 +223,27 @@ void  EString::Free()
   m_Capacity  = 0;
 }
 
+void  EString::IncreaseAllocation()
+{
+  if (!m_Data)
+  {
+    m_Capacity = 1;
+    m_Data = (EChar*)calloc(1, sizeof(EChar));
+  }
+  else
+  {
+    m_Capacity *= 2;
+    m_Data = (EChar*)reallocarray(m_Data, m_Capacity, sizeof(EChar));
+  }
+}
+
 void  EString::Append(EChar ch)
 {
-  // TODO: implement EString::Append()
+  if (m_Length >= m_Capacity)
+  {
+    IncreaseAllocation();
+  }
+  m_Data[m_Length++] = ch;
 }
 
 EString::EString()

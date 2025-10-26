@@ -50,7 +50,7 @@ struct Frame
   u32       m_HistoryCapacity;
   
   void  Free();
-  void  Render(u32 x, u32 y, u32 w, u32 h, bool active);
+  void  Render(u32 x, u32 y, u32 w, u32 h, bool active) const;
   i32   Save();
   void  Write(EChar ch, u32 pos);
   void  Write(const EString& str, u32 pos);
@@ -65,4 +65,4 @@ struct Frame
 
 Frame EmptyFrame();
 Frame StringFrame(const char* str);
-i32   FileFrame(OUT Frame& frame, const char* file);
+i32   FileFrame(OUT Frame& frame, const char* path);

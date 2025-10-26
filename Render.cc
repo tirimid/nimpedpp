@@ -3,7 +3,6 @@
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
-#include <Options.hh>
 #include <Prompt.hh>
 #include <Render.hh>
 
@@ -23,6 +22,16 @@ static u32            g_Height;
 static struct termios g_OldTermIOS;
 static EString        g_Bar;
 static u32            g_BarHeight;
+
+Attributes::Attributes()
+{
+}
+
+Attributes::Attributes(Color color)
+  : m_FG(color.m_FG),
+  m_BG(color.m_BG)
+{
+}
 
 i32 InitRender()
 {

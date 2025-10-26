@@ -3,10 +3,18 @@
 #pragma once
 
 #include <Encoding.hh>
+#include <Frame.hh>
+#include <Options.hh>
 #include <Util.hh>
 
 struct Editor
 {
+  Frame   m_Frames[FUNCTIONAL.MAX_FILES];
+  usize   m_CurFrame;
+  usize   m_NFrames;
+  EString m_Clipboard;
+  bool    m_Running;
+  bool    m_WriteInput;
 };
 
 extern Editor g_Editor;

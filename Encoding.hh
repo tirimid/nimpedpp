@@ -12,12 +12,12 @@ struct EChar
   u32   m_Codepoint   {};
   char  m_Encoding[4] {};
   
-  bool  IsPrint();
-  bool  IsSpace();
-  bool  IsAlpha();
-  bool  IsDigit();
-  bool  IsAlnum();
-  usize EncodingLength();
+  bool  IsPrint() const;
+  bool  IsSpace() const;
+  bool  IsAlpha() const;
+  bool  IsDigit() const;
+  bool  IsAlnum() const;
+  usize EncodingLength() const;
   
   EChar();
   EChar(u32 codepoint);
@@ -30,8 +30,9 @@ struct EString
   u32     m_Length    {};
   u32     m_Capacity  {};
   
-  char* ToCString();
+  char* ToCString() const;
   void  Free();
+  void  IncreaseAllocation();
   void  Append(EChar ch);
   
   EString();
