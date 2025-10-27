@@ -21,7 +21,7 @@ void  Frame::Render(u32 x, u32 y, u32 w, u32 h, bool active) const
   Attributes  attrTop {active ? g_Options.m_CurrentWindow : g_Options.m_Window};
   RenderFill(' ', attrTop, x, y, w, 1);
   
-  EString name  {m_Source ? m_Source : VISUAL.SCRATCH_NAME};
+  EString name  {m_Source ? m_Source : VISUAL::SCRATCH_NAME};
   
   {
     u32 i {};

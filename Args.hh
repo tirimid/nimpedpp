@@ -8,7 +8,7 @@
 struct Args
 {
   const char* m_ConfigDir;
-  const char* m_Files[FUNCTIONAL.MAX_FILES];
+  const char* m_Files[FUNCTIONAL::MAX_FILES];
   usize       m_NFiles;
   bool        m_CreateFiles;
 };

@@ -31,9 +31,9 @@ i32 ParseArgs(i32 argc, char* argv[])
   
   for (; optind < argc; ++optind)
   {
-    if (g_Args.m_NFiles >= FUNCTIONAL.MAX_FILES)
+    if (g_Args.m_NFiles >= FUNCTIONAL::MAX_FILES)
     {
-      Error("Args: Cannot open more than %u files!", FUNCTIONAL.MAX_FILES);
+      Error("Args: Cannot open more than %u files!", FUNCTIONAL::MAX_FILES);
       return (1);
     }
     

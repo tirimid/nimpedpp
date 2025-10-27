@@ -21,9 +21,9 @@ struct BindData
 
 static int  CompareBinds(const void* lhs, const void* rhs);
 
-static BindData   g_Binds[FUNCTIONAL.MAX_BINDS];
+static BindData   g_Binds[FUNCTIONAL::MAX_BINDS];
 static usize      g_NBinds;
-static EChar      g_CurBind[FUNCTIONAL.MAX_BIND_LENGTH];
+static EChar      g_CurBind[FUNCTIONAL::MAX_BIND_LENGTH];
 static usize      g_CurBindLength;
 static MacroMode  g_MacroMode;
 static EString    g_Macro;
@@ -37,9 +37,9 @@ void  Unbind()
 
 i32 Bind(const EChar* bind, void (*function)())
 {
-  if (g_NBinds >= FUNCTIONAL.MAX_BINDS)
+  if (g_NBinds >= FUNCTIONAL::MAX_BINDS)
   {
-    Error("Input: Cannot register more than %u keybinds!", FUNCTIONAL.MAX_BINDS);
+    Error("Input: Cannot register more than %u keybinds!", FUNCTIONAL::MAX_BINDS);
     return (1);
   }
   
@@ -108,7 +108,7 @@ EChar ReadKey()
     return ch;
   }
   
-  if (g_CurBindLength < FUNCTIONAL.MAX_BIND_LENGTH)
+  if (g_CurBindLength < FUNCTIONAL::MAX_BIND_LENGTH)
   {
     g_CurBind[g_CurBindLength++] = ch;
   }
