@@ -127,8 +127,12 @@ struct DynamicOptions
   usize       m_NMargins;
   u32         m_TabSize;
   
-  // editor color options
+  // editing options
+  bool        m_TabSpaces;
+  
+  // theme options
   Color       m_Global;
+  Color       m_GlobalCursor;
   Color       m_Window;
   Color       m_CurrentWindow;
   Color       m_Normal;
@@ -136,9 +140,7 @@ struct DynamicOptions
   Color       m_LineNumberHighlight;
   Color       m_Margin;
   Color       m_Cursor;
-  Color       m_GlobalCursor;
-  
-  // highlight color options
+  u8          m_CursorHighlightBG;
   Color       m_Comment;
   Color       m_Macro;
   Color       m_Special;
@@ -148,9 +150,6 @@ struct DynamicOptions
   Color       m_Emphasis;
   Color       m_String;
   Color       m_Number;
-  
-  // editing options
-  bool        m_TabSpaces;
   
   // language mode options
   struct
