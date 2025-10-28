@@ -26,7 +26,7 @@ i32 InitEditor()
     ++g_Editor.m_NFrames;
   }
   
-  if (g_Editor.m_NFrames)
+  if (!g_Editor.m_NFrames)
   {
     StringFrame(g_Editor.m_Frames[g_Editor.m_NFrames++], FRAME::GREETER_TEXT);
   }

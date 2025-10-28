@@ -62,7 +62,7 @@ void  Frame::Render(u32 x, u32 y, u32 w, u32 h, bool active) const
   }
   
   u32 totalGutter = g_Options.m_LeftGutter + g_Options.m_RightGutter;
-  RenderFill(' ', g_Options.m_LineNumber, x, y + w, lineNumberLength + totalGutter, h - 1);
+  RenderFill(' ', g_Options.m_LineNumber, x, y + 1, lineNumberLength + totalGutter, h - 1);
   RenderFill(' ', g_Options.m_Normal, x + lineNumberLength + totalGutter, y + 1, w - lineNumberLength - totalGutter, h - 1);
   
   u32 leftPad = lineNumberLength + totalGutter;

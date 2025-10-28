@@ -94,7 +94,7 @@ void  QuitRender(bool clearScreen)
 
 void  RenderFill(EChar ch, u32 x, u32 y, u32 w, u32 h)
 {
-  if (x >= g_Width || y >= g_Width)
+  if (x >= g_Width || y >= g_Height)
   {
     return;
   }
@@ -113,7 +113,7 @@ void  RenderFill(EChar ch, u32 x, u32 y, u32 w, u32 h)
 
 void  RenderFill(Attributes a, u32 x, u32 y, u32 w, u32 h)
 {
-  if (x >= g_Width || y >= g_Width)
+  if (x >= g_Width || y >= g_Height)
   {
     return;
   }
@@ -132,7 +132,7 @@ void  RenderFill(Attributes a, u32 x, u32 y, u32 w, u32 h)
 
 void  RenderFill(EChar ch, Attributes a, u32 x, u32 y, u32 w, u32 h)
 {
-  if (x >= g_Width || y >= g_Width)
+  if (x >= g_Width || y >= g_Height)
   {
     return;
   }
@@ -252,12 +252,16 @@ void  RenderBar(OWNS EString str)
 {
   g_Bar.Free();
   g_Bar = str;
+  g_BarHeight = (g_Bar.m_Length + g_Width - 1) / g_Width;
+  g_BarHeight += !g_BarHeight;
 }
 
 void  RenderBar(const char* str)
 {
   g_Bar.Free();
   g_Bar = str;
+  g_BarHeight = (g_Bar.m_Length + g_Width - 1) / g_Width;
+  g_BarHeight += !g_BarHeight;
 }
 
 static void ApplyAttributes(u8 fg, u8 bg)
@@ -290,5 +294,9 @@ static void SIGWINCHHandler(int arg)
   
   g_Width = winSize.ws_col;
   g_Height = winSize.ws_row;
+  
+  g_CellChars = (EChar*)reallocarray(g_CellChars, g_Width * g_Height, sizeof(EChar));
+  g_CellAttributes = (Attributes*)reallocarray(g_CellAttributes, g_Width * g_Height, sizeof(Attributes));
+  
   RenderBar(g_Bar.Copy()); // recompute bar
 }

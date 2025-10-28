@@ -140,6 +140,7 @@ EString EString::Copy() const
   newEString.m_Data     = (EChar*)calloc(m_Capacity, sizeof(EChar));
   newEString.m_Length   = m_Length;
   newEString.m_Capacity = m_Capacity;
+  memcpy(newEString.m_Data, m_Data, m_Capacity * sizeof(EChar));
   
   return (newEString);
 }
@@ -203,7 +204,7 @@ EChar ReadEChar(FILE* file)
   i32 firstByte = fgetc(file);
   if (firstByte == EOF)
   {
-    return (EChar{REPLACEMENT_CHAR});
+    return (REPLACEMENT_CHAR);
   }
   
   if (firstByte < 0x80)
@@ -230,7 +231,7 @@ EChar ReadEChar(FILE* file)
     i32 secondByte  = fgetc(file);
     if (secondByte == EOF)
     {
-      return (EChar{REPLACEMENT_CHAR});
+      return (REPLACEMENT_CHAR);
     }
     
     codepoint |= (firstByte & 0x1f) << 6;
@@ -244,7 +245,7 @@ EChar ReadEChar(FILE* file)
     i32 thirdByte   = fgetc(file);
     if (secondByte == EOF || thirdByte == EOF)
     {
-      return (EChar{REPLACEMENT_CHAR});
+      return (REPLACEMENT_CHAR);
     }
     
     codepoint |= (firstByte & 0xf) << 12;
@@ -260,7 +261,7 @@ EChar ReadEChar(FILE* file)
     i32 fourthByte  = fgetc(file);
     if (secondByte == EOF || thirdByte == EOF || fourthByte == EOF)
     {
-      return (EChar{REPLACEMENT_CHAR});
+      return (REPLACEMENT_CHAR);
     }
     
     codepoint |= (firstByte & 0x7) << 18;
@@ -271,10 +272,10 @@ EChar ReadEChar(FILE* file)
     break;
   }
   default:
-    return (EChar{REPLACEMENT_CHAR});
+    return (REPLACEMENT_CHAR);
   }
   
-  return (EChar{codepoint});
+  return (codepoint);
 }
 
 i32 PrintEChar(EChar ch)
@@ -284,18 +285,12 @@ i32 PrintEChar(EChar ch)
 
 i32 PrintEChar(FILE* file, EChar ch)
 {
-  for (usize i = 0; i < 4; ++i)
+  for (usize i = 0; i < 4 && ch.m_Encoding[i]; ++i)
   {
-    if (!ch.m_Encoding[i])
-    {
-      return (0);
-    }
-    
-    if (fprintf(file, "%c", ch.m_Encoding[i]) < 0)
+    if (fputc(ch.m_Encoding[i], file) == EOF)
     {
       return (1);
     }
   }
-  
   return (0);
 }
