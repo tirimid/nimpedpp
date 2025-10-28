@@ -105,7 +105,7 @@ EChar ReadKey()
   EChar ch  = ReadRawKey();
   if (!g_NBinds)
   {
-    return ch;
+    return (ch);
   }
   
   if (g_CurBindLength < FUNCTIONAL::MAX_BIND_LENGTH)
@@ -122,7 +122,7 @@ EChar ReadKey()
   isize mid   {};
   while (low <= high)
   {
-    mid = low / 2 + high / 2;
+    mid = (low + high) / 2;
     
     BindData  otherBind =
     {
@@ -155,7 +155,7 @@ found:
       g_CurBindLength = 0;
     }
     
-    return (EChar{REPLACEMENT_CHAR});
+    return (REPLACEMENT_CHAR);
   }
   
   g_CurBindLength = 0;

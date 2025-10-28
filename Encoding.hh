@@ -109,10 +109,11 @@ struct EString
   u32     m_Length    {};
   u32     m_Capacity  {};
   
-  char* ToCString() const;
-  void  Free();
-  void  IncreaseAllocation();
-  void  Append(EChar ch);
+  char*   ToCString() const;
+  EString Copy() const;
+  void    Free();
+  void    IncreaseAllocation();
+  void    Append(EChar ch);
   
   EString();
   EString(const char* cString);

@@ -2,4 +2,7 @@
 
 #include <Prompt.hh>
 
-Prompt  g_Prompt;
+Prompt  g_Prompt =
+{
+  .m_Cursor = -1
+};

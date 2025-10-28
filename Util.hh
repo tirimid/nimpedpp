@@ -12,6 +12,7 @@ extern "C"
 
 #define OUT
 #define IN_OUT
+#define OWNS
 
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 

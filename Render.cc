@@ -27,6 +27,12 @@ Attributes::Attributes()
 {
 }
 
+Attributes::Attributes(u8 fg, u8 bg)
+  : m_FG(fg),
+  m_BG(bg)
+{
+}
+
 Attributes::Attributes(Color color)
   : m_FG(color.m_FG),
   m_BG(color.m_BG)
@@ -242,7 +248,7 @@ void  WindowSize(OUT u32& width, OUT u32& height)
   height = g_Height - g_BarHeight - ((u32)g_Prompt.m_Cursor >= g_Prompt.m_Data.m_Length && g_Prompt.m_Cursor % g_Width == 0);
 }
 
-void  RenderBar(EString str)
+void  RenderBar(OWNS EString str)
 {
   g_Bar.Free();
   g_Bar = str;
@@ -284,5 +290,5 @@ static void SIGWINCHHandler(int arg)
   
   g_Width = winSize.ws_col;
   g_Height = winSize.ws_row;
-  RenderBar(g_Bar); // recompute bar
+  RenderBar(g_Bar.Copy()); // recompute bar
 }

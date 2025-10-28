@@ -18,6 +18,7 @@ workspace "nimped++"
       runtime "Debug"
       symbols "On"
       optimize "Off"
+      sanitize "address"
     
     filter "configurations:Release"
       runtime "Release"

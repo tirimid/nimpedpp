@@ -63,6 +63,6 @@ struct Frame
   u32   Tabulate(u32 at);
 };
 
-Frame EmptyFrame();
-Frame StringFrame(const char* str);
+void  EmptyFrame(OUT Frame& frame);
+void  StringFrame(OUT Frame& frame, const char* str);
 i32   FileFrame(OUT Frame& frame, const char* path);

@@ -128,6 +128,22 @@ char* EString::ToCString() const
   return (cString);
 }
 
+EString EString::Copy() const
+{
+  if (!m_Data)
+  {
+    return (EString{});
+  }
+  
+  EString newEString  {};
+  
+  newEString.m_Data     = (EChar*)calloc(m_Capacity, sizeof(EChar));
+  newEString.m_Length   = m_Length;
+  newEString.m_Capacity = m_Capacity;
+  
+  return (newEString);
+}
+
 void  EString::Free()
 {
   if (m_Data)
@@ -142,16 +158,8 @@ void  EString::Free()
 
 void  EString::IncreaseAllocation()
 {
-  if (!m_Data)
-  {
-    m_Capacity = 1;
-    m_Data = (EChar*)calloc(1, sizeof(EChar));
-  }
-  else
-  {
-    m_Capacity *= 2;
-    m_Data = (EChar*)reallocarray(m_Data, m_Capacity, sizeof(EChar));
-  }
+  m_Capacity = m_Data ? 2 * m_Capacity : 1;
+  m_Data = (EChar*)reallocarray(m_Data, m_Capacity, sizeof(EChar));
 }
 
 void  EString::Append(EChar ch)
@@ -280,14 +288,14 @@ i32 PrintEChar(FILE* file, EChar ch)
   {
     if (!ch.m_Encoding[i])
     {
-      return 0;
+      return (0);
     }
     
     if (fprintf(file, "%c", ch.m_Encoding[i]) < 0)
     {
-      return 1;
+      return (1);
     }
   }
   
-  return 0;
+  return (0);
 }

@@ -4,6 +4,7 @@
 #include <Binds.hh>
 #include <cstring>
 #include <Editor.hh>
+#include <Input.hh>
 #include <Render.hh>
 
 Editor  g_Editor;
@@ -27,8 +28,7 @@ i32 InitEditor()
   
   if (g_Editor.m_NFrames)
   {
-    g_Editor.m_Frames[0] = StringFrame(FRAME::GREETER_TEXT);
-    ++g_Editor.m_NFrames;
+    StringFrame(g_Editor.m_Frames[g_Editor.m_NFrames++], FRAME::GREETER_TEXT);
   }
   
   InstallBaseBinds();
@@ -38,7 +38,18 @@ i32 InitEditor()
 
 void  EditorLoop()
 {
-  // TODO: implement
+  g_Editor.m_Running = true;
+  while (g_Editor.m_Running)
+  {
+    RenderEditor();
+    RenderPresent();
+    
+    EChar input = ReadKey();
+    if (g_Editor.m_WriteInput && IsWritable(input))
+    {
+      // TODO: echo input characters into buffer when m_WriteInput
+    }
+  }
 }
 
 void  ArrangeFrame(usize idx, OUT u32& x, OUT u32& y, OUT u32& w, OUT u32& h)
@@ -66,7 +77,7 @@ void  ArrangeFrame(usize idx, OUT u32& x, OUT u32& y, OUT u32& w, OUT u32& h)
   else
   {
     h = renderHeight / (g_Editor.m_NFrames - 1);
-    y = (idx - 1) * renderHeight;
+    y = (idx - 1) * h;
     x = g_Options.m_MasterNumer * renderWidth / g_Options.m_MasterDenom;
     w = renderWidth - x;
     
@@ -107,7 +118,7 @@ void  DestroyFrame(usize idx)
   
   if (g_Editor.m_NFrames == 1)
   {
-    g_Editor.m_Frames[0] = EmptyFrame();
+    EmptyFrame(g_Editor.m_Frames[0]);
     return;
   }
   

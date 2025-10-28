@@ -12,6 +12,7 @@ struct Attributes
   u8  m_BG  {};
   
   Attributes();
+  Attributes(u8 fg, u8 bg);
   Attributes(Color color);
 };
 
@@ -28,5 +29,5 @@ void  RenderGet(OUT Attributes& a, u32 x, u32 y);
 void  RenderGet(OUT EChar& ch, OUT Attributes& a, u32 x, u32 y);
 void  RenderPresent();
 void  WindowSize(OUT u32& width, OUT u32& height);
-void  RenderBar(EString str);
+void  RenderBar(OWNS EString str);
 void  RenderBar(const char* str);

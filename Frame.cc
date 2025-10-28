@@ -2,7 +2,9 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <Frame.hh>
+#include <Highlight.hh>
 #include <Render.hh>
 
 void  Frame::Free()
@@ -71,7 +73,97 @@ void  Frame::Render(u32 x, u32 y, u32 w, u32 h, bool active) const
     RenderFill(' ', g_Options.m_Margin, x + leftPad + g_Options.m_Margins[i], y + 1, 1, h - 1);
   }
   
-  // TODO: finish implementing
+  // render frame contents and find cursor position
+  u32 cx      = 0;
+  u32 cy      = 0;
+  u32 cursorX = -1;
+  u32 cursorY = -1;
+  u32 curLine = startLine;
+  
+  Region  highlight = FindHighlight(*this, 0);
+  while (highlight.m_UpperBound < m_Start)
+  {
+    highlight = FindHighlight(*this, highlight.m_UpperBound);
+  }
+  
+  for (u32 i = m_Start; i < m_Buffer.m_Length; ++i)
+  {
+    if (i >= highlight.m_UpperBound)
+    {
+      highlight = FindHighlight(*this, highlight.m_UpperBound);
+    }
+    
+    if (!cx)
+    {
+      char  lineNumber[32]  {};
+      snprintf(lineNumber, sizeof(lineNumber), "%u", curLine);
+      
+      u32 pad = g_Options.m_LeftGutter + lineNumberLength - strlen(lineNumber);
+      for (u32 j = 0; lineNumber[j]; ++j)
+      {
+        RenderPut((u32)lineNumber[j], x + pad + j, y + cy + 1);
+      }
+      
+      ++curLine;
+    }
+    
+    if (leftPad + cx >= w)
+    {
+      cx = 0;
+      ++cy;
+    }
+    
+    if (cy + 1 >= h)
+    {
+      break;
+    }
+    
+    if (i == m_Cursor)
+    {
+      cursorX = cx;
+      cursorY = cy;
+    }
+    
+    u32 cw  {};
+    switch (m_Buffer.m_Data[i].m_Codepoint)
+    {
+    case '\n':
+      cx = 0;
+      ++cy;
+      continue;
+    case '\t':
+      cw = g_Options.m_TabSize - cx % g_Options.m_TabSize;
+      break;
+    default:
+      cw = 1;
+      if (i >= highlight.m_LowerBound && i < highlight.m_UpperBound)
+      {
+        RenderPut(Attributes{highlight.m_FG, highlight.m_BG}, x + leftPad + cx, y + cy + 1);
+      }
+      else
+      {
+        RenderPut(g_Options.m_Normal, x + leftPad + cx, y + cy + 1);
+      }
+      RenderPut(m_Buffer.m_Data[i].IsPrint() ? m_Buffer.m_Data[i] : EChar{REPLACEMENT_CHAR}, x + leftPad + cx, y + cy + 1);
+      break;
+    }
+    
+    cx += cw;
+  }
+  
+  cursorX = cursorX == (u32)-1 ? cx : cursorX;
+  cursorY = cursorY == (u32)-1 ? cy : cursorY;
+  
+  // render cursor and row highlights
+  RenderFill(g_Options.m_LineNumberHighlight, x, y + cursorY + 1, leftPad, 1);
+  for (u32 i = 0; leftPad + i < w; ++i)
+  {
+    Attributes  a {};
+    RenderGet(a, x + leftPad + i, y + cursorY + 1);
+    a.m_BG = a.m_BG == g_Options.m_Normal.m_BG ? g_Options.m_CursorHighlightBG : a.m_BG;
+    RenderPut(a, x + leftPad + i, y + cursorY + 1);
+  }
+  RenderPut(g_Options.m_Cursor, x + leftPad + cursorX, y + cursorY + 1);
 }
 
 i32 Frame::Save()
@@ -142,7 +234,84 @@ void  Frame::LoadCursor()
 
 void  Frame::ComputeBounds(u32 w, u32 h)
 {
-  // TODO: implement
+  if (m_Cursor < m_Start)
+  {
+    m_Start = m_Cursor;
+    while (m_Start > 0 && m_Buffer.m_Data[m_Start - 1].m_Codepoint != '\n')
+    {
+      --m_Start;
+    }
+    return;
+  }
+  
+  u32 lastLine  = 1;
+  for (u32 i = 0; i < m_Buffer.m_Length; ++i)
+  {
+    lastLine += m_Buffer.m_Data[i].m_Codepoint == '\n';
+  }
+  
+  u32 lineNumberLength  = 0;
+  while (lastLine)
+  {
+    ++lineNumberLength;
+    lastLine /= 10;
+  }
+  
+  u32 leftPad = g_Options.m_LeftGutter + g_Options.m_RightGutter + lineNumberLength;
+  
+  u32 cx  = 0;
+  u32 cy  = 0;
+  for (usize i = m_Start; i < m_Cursor; ++i)
+  {
+    if (leftPad + cx >= w)
+    {
+      cx = 0;
+      ++cy;
+    }
+    
+    u32 cw  {};
+    switch (m_Buffer.m_Data[i].m_Codepoint)
+    {
+    case '\n':
+      cx = 0;
+      ++cy;
+      continue;
+    case '\t':
+      cw = g_Options.m_TabSize - cx % g_Options.m_TabSize;
+      break;
+    default:
+      cw = 1;
+      break;
+    }
+    
+    cx += cw;
+  }
+  
+  for (cx = 0; cy + 1 >= h; ++m_Start)
+  {
+    if (leftPad + cx >= w)
+    {
+      cx = 0;
+      --cy;
+    }
+    
+    u32 cw  {};
+    switch (m_Buffer.m_Data[m_Start].m_Codepoint)
+    {
+    case '\n':
+      cx = 0;
+      --cy;
+      continue;
+    case '\t':
+      cw = g_Options.m_TabSize - cx % g_Options.m_TabSize;
+      break;
+    default:
+      cw = 1;
+      break;
+    }
+    
+    cx += cw;
+  }
 }
 
 u32 Frame::Tabulate(u32 at)
@@ -150,9 +319,9 @@ u32 Frame::Tabulate(u32 at)
   // TODO: implement
 }
 
-Frame EmptyFrame()
+void  EmptyFrame(OUT Frame& frame)
 {
-  Frame frame =
+  frame = (Frame)
   {
     .m_Buffer           = EString{},
     .m_Source           = nullptr,
@@ -164,12 +333,11 @@ Frame EmptyFrame()
     .m_HistoryLength    = 0,
     .m_HistoryCapacity  = 1
   };
-  return (frame);
 }
 
-Frame StringFrame(const char* str)
+void  StringFrame(OUT Frame& frame, const char* str)
 {
-  Frame frame =
+  frame = (Frame)
   {
     .m_Buffer           = EString{str},
     .m_Source           = nullptr,
@@ -181,7 +349,6 @@ Frame StringFrame(const char* str)
     .m_HistoryLength    = 0,
     .m_HistoryCapacity  = 1
   };
-  return (frame);
 }
 
 i32 FileFrame(OUT Frame& frame, const char* path)
