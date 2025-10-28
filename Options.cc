@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <Args.hh>
+#include <cerrno>
 #include <climits>
 #include <cstdlib>
 #include <cstring>
@@ -12,12 +13,6 @@ extern "C"
 #include <pwd.h>
 }
 
-struct NamedColor
-{
-  const char* m_Name;
-  u8          m_Color;
-};
-
 DynamicOptions  g_Options;
 
 static FILE*  OpenConfig(const char* configPath);
@@ -25,131 +20,133 @@ static i32    GetRaw(const char* path, FILE* file, const char* key, OUT char val
 static bool   GetRaw(const char* path, FILE* file, const char* key, OUT char value[], i32 n);
 static i32    GetU32(const char* path, FILE* file, const char* key, OUT u32& value);
 static bool   GetU32(const char* path, FILE* file, const char* key, OUT u32& value, i32 n);
-static i32    GetColor(const char* path, FILE* file, const char* key, OUT Color& value);
+static i32    GetColor(const char* path, FILE* file, const char* key, OUT u8& value);
+static i32    GetColorPair(const char* path, FILE* file, const char* key, OUT Color& value);
 static i32    GetBool(const char* path, FILE* file, const char* key, OUT bool& value);
 static void   ReadLangConfig(FILE* file, const char* keywordKey, const char* primitiveKey, LangMode langMode);
 
-static const NamedColor g_NamedColors[] =
-{
-  // terminal
-  {"Terminal::DarkBG",          0},
-  {"Terminal::DarkRed",         1},
-  {"Terminal::DarkGreen",       2},
-  {"Terminal::DarkYellow",      3},
-  {"Terminal::DarkBlue",        4},
-  {"Terminal::DarkPurple",      5},
-  {"Terminal::DarkAqua",        6},
-  {"Terminal::DarkFG",          7},
-  {"Terminal::LightBG",         8},
-  {"Terminal::LightRed",        9},
-  {"Terminal::LightGreen",      10},
-  {"Terminal::LightYellow",     11},
-  {"Terminal::LightBlue",       12},
-  {"Terminal::LightPurple",     13},
-  {"Terminal::LightAqua",       14},
-  {"Terminal::LightFG",         15},
-  
-  // gruvbox dark
-  {"GruvboxDark::BG",           235},
-  {"GruvboxDark::DarkRed",      124},
-  {"GruvboxDark::DarkGreen",    106},
-  {"GruvboxDark::DarkYellow",   172},
-  {"GruvboxDark::DarkBlue",     66},
-  {"GruvboxDark::DarkPurple",   132},
-  {"GruvboxDark::DarkAqua",     72},
-  {"GruvboxDark::LightGray",    246},
-  {"GruvboxDark::DarkGray",     245},
-  {"GruvboxDark::LightRed",     167},
-  {"GruvboxDark::LightGreen",   142},
-  {"GruvboxDark::LightYellow",  214},
-  {"GruvboxDark::LightBlue",    109},
-  {"GruvboxDark::LightPurple",  175},
-  {"GruvboxDark::LightAqua",    108},
-  {"GruvboxDark::FG",           223},
-  {"GruvboxDark::BG0_H",        234},
-  {"GruvboxDark::BG1",          237},
-  {"GruvboxDark::BG2",          239},
-  {"GruvboxDark::BG3",          241},
-  {"GruvboxDark::BG4",          243},
-  {"GruvboxDark::DarkOrange",   166},
-  {"GruvboxDark::BG0_S",        236},
-  {"GruvboxDark::FG4",          246},
-  {"GruvboxDark::FG3",          248},
-  {"GruvboxDark::FG2",          250},
-  {"GruvboxDark::FG1",          223},
-  {"GruvboxDark::FG0",          229},
-  {"GruvboxDark::LightOrange",  208},
-  
-  // github dark
-  {"GithubDark::Base0",         233},
-  {"GithubDark::Base1",         235},
-  {"GithubDark::Base2",         237},
-  {"GithubDark::Base3",         243},
-  {"GithubDark::Base4",         249},
-  {"GithubDark::Base5",         252},
-  {"GithubDark::LightRed",      210},
-  {"GithubDark::DarkRed",       203},
-  {"GithubDark::DarkYellow",    178},
-  {"GithubDark::LightYellow",   221},
-  {"GithubDark::LightBlue",     153},
-  {"GithubDark::DarkBlue",      75},
-  {"GithubDark::LightPurple",   183},
-  {"GithubDark::DarkPurple",    135},
-  {"GithubDark::LightGreen",    114},
-  {"GithubDark::DarkGreen",     76},
-  
-  // vs dark
-  {"VSDark::BG",                233},
-  {"VSDark::FG0",               188},
-  {"VSDark::FG1",               108},
-  {"VSDark::Beige",             180},
-  {"VSDark::Aqua0",             50},
-  {"VSDark::Aqua1",             108},
-  {"VSDark::Purple",            169},
-  {"VSDark::Green",             64},
-  {"VSDark::Blue0",             152},
-  {"VSDark::Blue1",             30},
-  {"VSDark::Blue2",             39},
-  {"VSDark::Yellow",            230},
-  
-  // ridiculous light
-  {"RidiculousLight::BGLight",  254},
-  {"RidiculousLight::BGDark",   251},
-  {"RidiculousLight::BGNight",  249},
-  {"RidiculousLight::FGLight",  237},
-  {"RidiculousLight::FGDark",   233},
-  {"RidiculousLight::Blue",     21},
-  {"RidiculousLight::Red",      124},
-  {"RidiculousLight::Orange",   130},
-  {"RidiculousLight::Aqua",     65},
-  {"RidiculousLight::Purple",   126}
-};
-
 i32 ParseOptions()
 {
-  // TODO: implement
-  return (1);
+  FILE* file  = OpenConfig(FUNCTIONAL::EDITOR_CONF);
+  if (!file)
+  {
+    return (1);
+  }
+  
+  auto  getEditorU32  = [&](const char* key, OUT u32& value)
+  {
+    i32 error = GetU32(FUNCTIONAL::EDITOR_CONF, file, key, value);
+    return (error);
+  };
+  
+  // layout options
+  if (getEditorU32("MasterNumer", g_Options.m_MasterNumer)
+    || getEditorU32("MasterDenom", g_Options.m_MasterDenom)
+    || getEditorU32("LeftGutter", g_Options.m_LeftGutter)
+    || getEditorU32("RightGutter", g_Options.m_RightGutter)
+    || getEditorU32("TabSize", g_Options.m_TabSize))
+  {
+    fclose(file);
+    return (1);
+  }
+  
+  u32 margin  {};
+  for (i32 i = 0; GetU32(FUNCTIONAL::EDITOR_CONF, file, "Margin", margin, i); ++i)
+  {
+    ++g_Options.m_NMargins;
+    g_Options.m_Margins = (u32*)reallocarray(g_Options.m_Margins, g_Options.m_NMargins, sizeof(u32));
+    g_Options.m_Margins[g_Options.m_NMargins - 1] = margin;
+  }
+  
+  // editing options
+  if (GetBool(FUNCTIONAL::EDITOR_CONF, file, "TabSpaces", g_Options.m_TabSpaces))
+  {
+    fclose(file);
+    return (1);
+  }
+  
+  fclose(file);
+  file = OpenConfig(FUNCTIONAL::COLOR_CONF);
+  if (!file)
+  {
+    return (1);
+  }
+  
+  auto  getColorColor = [&](const char* key, OUT u8& value)
+  {
+    i32 error = GetColor(FUNCTIONAL::COLOR_CONF, file, key, value);
+    return (error);
+  };
+  
+  auto  getColorColorPair = [&](const char* key, OUT Color& value)
+  {
+    i32 error = GetColorPair(FUNCTIONAL::COLOR_CONF, file, key, value);
+    return (error);
+  };
+  
+  // theme options
+  if (getColorColorPair("Global", g_Options.m_Global)
+    || getColorColorPair("GlobalCursor", g_Options.m_GlobalCursor)
+    || getColorColorPair("Window", g_Options.m_Window)
+    || getColorColorPair("CurrentWindow", g_Options.m_CurrentWindow)
+    || getColorColorPair("Normal", g_Options.m_Normal)
+    || getColorColorPair("LineNumber", g_Options.m_LineNumber)
+    || getColorColorPair("LineNumberHighlight", g_Options.m_LineNumberHighlight)
+    || getColorColorPair("Margin", g_Options.m_Margin)
+    || getColorColorPair("Cursor", g_Options.m_Cursor)
+    || getColorColor("CursorHighlightBG", g_Options.m_CursorHighlightBG)
+    || getColorColorPair("Comment", g_Options.m_Comment)
+    || getColorColorPair("Macro", g_Options.m_Macro)
+    || getColorColorPair("Special", g_Options.m_Special)
+    || getColorColorPair("Keyword", g_Options.m_Keyword)
+    || getColorColorPair("Primitive", g_Options.m_Primitive)
+    || getColorColorPair("Type", g_Options.m_Type)
+    || getColorColorPair("Emphasis", g_Options.m_Emphasis)
+    || getColorColorPair("String", g_Options.m_String)
+    || getColorColorPair("Number", g_Options.m_Number))
+  {
+    fclose(file);
+    return (1);
+  }
+  
+  fclose(file);
+  file = OpenConfig(FUNCTIONAL::LANG_CONF);
+  if (!file)
+  {
+    return (1);
+  }
+  
+  // language mode options
+  ReadLangConfig(file, "CKeyword", "CPrimitive", LANG_MODE_C);
+  ReadLangConfig(file, "ShKeyword", "ShPrimitive", LANG_MODE_SH);
+  ReadLangConfig(file, "JSKeyword", "JSPrimitive", LANG_MODE_JS);
+  ReadLangConfig(file, "CCKeyword", "CCPrimitive", LANG_MODE_CC);
+  
+  fclose(file);
+  return (0);
 }
 
 static FILE*  OpenConfig(const char* configPath)
 {
-  char  path[PATH_MAX + 1]  {};
+  char  path[PATH_MAX]  {};
   
   if (g_Args.m_ConfigDir)
   {
     usize length  = snprintf(path, PATH_MAX, "%s", g_Args.m_ConfigDir);
     
-    char  fixed[PATH_MAX + 1] {};
+    char  fixed[PATH_MAX] {};
     if (length && path[length - 1] != '/')
     {
-      snprintf(fixed, PATH_MAX, "%s/", path);
+      // compiler really needs to shut up about this crap
+      i32 nbytes  = snprintf(fixed, sizeof(fixed), "%s/", path);
+      (void)nbytes;
     }
     else
     {
-      snprintf(fixed, PATH_MAX, "%s", path);
+      snprintf(fixed, sizeof(fixed), "%s", path);
     }
     
-    snprintf(path, PATH_MAX, "%s%s", fixed, configPath);
+    snprintf(path, sizeof(path), "%s%s", fixed, configPath);
   }
   else
   {
@@ -166,7 +163,7 @@ static FILE*  OpenConfig(const char* configPath)
       home = userPasswd->pw_dir;
     }
     
-    snprintf(path, PATH_MAX, "%s/%s/%s", home, FUNCTIONAL::CONFIG_DIR, configPath);
+    snprintf(path, sizeof(path), "%s/%s/%s", home, FUNCTIONAL::CONFIG_DIR, configPath);
   }
   
   FILE* file  = fopen(path, "rb");
@@ -278,25 +275,183 @@ static bool GetRaw(const char* path, FILE* file, const char* key, OUT char value
 
 static i32  GetU32(const char* path, FILE* file, const char* key, OUT u32& value)
 {
-  // TODO: implement
+  char  buffer[INTERNAL::CONFIG_VALUE_LENGTH] {};
+  if (GetRaw(path, file, key, buffer))
+  {
+    return (1);
+  }
+  
+  errno = 0;
+  unsigned long long  ull = strtoull(buffer, nullptr, 0);
+  if (errno || ull > UINT32_MAX)
+  {
+    Error("Options: Invalid U32 value for %s in %s!", key, path);
+    return (1);
+  }
+  
+  value = ull;
+  return (0);
 }
 
 static bool GetU32(const char* path, FILE* file, const char* key, OUT u32& value, i32 n)
 {
-  // TODO: implement
+  char  buffer[INTERNAL::CONFIG_VALUE_LENGTH] {};
+  if (!GetRaw(path, file, key, buffer, n))
+  {
+    return (false);
+  }
+  
+  errno = 0;
+  unsigned long long  ull = strtoull(buffer, nullptr, 0);
+  if (errno || ull > UINT32_MAX)
+  {
+    Error("Options: Invalid U32 value for %s in %s!", key, path);
+    return (false);
+  }
+  
+  value = ull;
+  return (true);
 }
 
-static i32  GetColor(const char* path, FILE* file, const char* key, OUT Color& value)
+static i32  GetColor(const char* path, FILE* file, const char* key, OUT u8& value)
 {
-  // TODO: implement
+  char  buffer[INTERNAL::CONFIG_VALUE_LENGTH] {};
+  if (GetRaw(path, file, key, buffer))
+  {
+    return (1);
+  }
+  
+  // check for named colors
+  for (usize i = 0; i < ARRAY_SIZE(NAMED_COLORS); ++i)
+  {
+    if (!strcmp(buffer, NAMED_COLORS[i].m_Name))
+    {
+      value = NAMED_COLORS[i].m_Color;
+      return (0);
+    }
+  }
+  
+  errno = 0;
+  unsigned long long  ull = strtoull(buffer, nullptr, 0);
+  if (errno || ull > UINT8_MAX)
+  {
+    Error("Options: Invalid color value for %s in %s!", key, path);
+    return (1);
+  }
+  
+  value = ull;
+  return (0);
+}
+
+static i32  GetColorPair(const char* path, FILE* file, const char* key, OUT Color& value)
+{
+  char  buffer[INTERNAL::CONFIG_VALUE_LENGTH] {};
+  if (GetRaw(path, file, key, buffer))
+  {
+    return (1);
+  }
+  
+  char  fgBuffer[INTERNAL::CONFIG_VALUE_LENGTH] {};
+  char  bgBuffer[INTERNAL::CONFIG_VALUE_LENGTH] {};
+  if (sscanf(buffer, INTERNAL::CONFIG_COLOR_SCAN, fgBuffer, bgBuffer) != 2)
+  {
+    Error("Options: Wrongly formatted color pair value for %s in %s!", key, path);
+    return (1);
+  }
+  
+  // invalid color value used as default so that non-assignment can be detected
+  constexpr u16 INVALID_COLOR = 256;
+  u16           fg            = INVALID_COLOR;
+  u16           bg            = INVALID_COLOR;
+  
+  // check for named colors
+  for (usize i = 0; i < ARRAY_SIZE(NAMED_COLORS); ++i)
+  {
+    if (!strcmp(fgBuffer, NAMED_COLORS[i].m_Name))
+    {
+      fg = NAMED_COLORS[i].m_Color;
+    }
+    
+    if (!strcmp(bgBuffer, NAMED_COLORS[i].m_Name))
+    {
+      bg = NAMED_COLORS[i].m_Color;
+    }
+  }
+  
+  if (fg == INVALID_COLOR)
+  {
+    errno = 0;
+    unsigned long long  ull = strtoull(fgBuffer, nullptr, 0);
+    if (errno || ull > UINT8_MAX)
+    {
+      Error("Options: Invalid FG color value for %s in %s!", key, path);
+      return (1);
+    }
+    fg = ull;
+  }
+  
+  if (bg == INVALID_COLOR)
+  {
+    errno = 0;
+    unsigned long long  ull = strtoull(bgBuffer, nullptr, 0);
+    if (errno || ull > UINT8_MAX)
+    {
+      Error("Options: Invalid BG color value for %s in %s!", key, path);
+      return (1);
+    }
+    bg = ull;
+  }
+  
+  value.m_FG = fg;
+  value.m_BG = bg;
+  return (0);
 }
 
 static i32  GetBool(const char* path, FILE* file, const char* key, OUT bool& value)
 {
-  // TODO: implement
+  char  buffer[INTERNAL::CONFIG_VALUE_LENGTH] {};
+  if (GetRaw(path, file, key, buffer))
+  {
+    return (1);
+  }
+  
+  if (!strcmp(buffer, "true"))
+  {
+    value = true;
+    return (0);
+  }
+  else if (!strcmp(buffer, "false"))
+  {
+    value = false;
+    return (0);
+  }
+  else
+  {
+    Error("Options: Invalid boolean value for %s in %s!", key, path);
+    return (1);
+  }
 }
 
 static void ReadLangConfig(FILE* file, const char* keywordKey, const char* primitiveKey, LangMode langMode)
 {
-  // TODO: implement
+  char  value[INTERNAL::CONFIG_VALUE_LENGTH]  {};
+  
+  for (i32 i = 0; GetRaw(FUNCTIONAL::LANG_CONF, file, keywordKey, value, i); ++i)
+  {
+    EString** keywords  = &g_Options.m_Lang[langMode].m_Keywords;
+    usize*    nKeywords = &g_Options.m_Lang[langMode].m_NKeywords;
+    
+    ++*nKeywords;
+    *keywords = (EString*)reallocarray(*keywords, *nKeywords, sizeof(EString));
+    (*keywords)[*nKeywords - 1] = EString{value};
+  }
+  
+  for (i32 i = 0; GetRaw(FUNCTIONAL::LANG_CONF, file, primitiveKey, value, i); ++i)
+  {
+    EString** primitives  = &g_Options.m_Lang[langMode].m_Primitives;
+    usize*    nPrimitives = &g_Options.m_Lang[langMode].m_NPrimitives;
+    
+    ++*nPrimitives;
+    *primitives = (EString*)reallocarray(*primitives, *nPrimitives, sizeof(EString));
+  }
 }

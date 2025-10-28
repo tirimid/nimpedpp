@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <Editor.hh>
+#include <Render.hh>
 #include <Util.hh>
 
 extern "C"
@@ -19,7 +21,14 @@ void  Info(const char* fmt, ...)
   char  msg[512]  = "Info: ";
   vsnprintf(&msg[5], sizeof(msg) - 6, fmt, args);
   
-  // TODO: either display in editor or terminal
+  if (g_Editor.m_Running)
+  {
+    RenderBar(msg);
+  }
+  else
+  {
+    fprintf(stderr, "%s\n", msg);
+  }
   
   va_end(args);
 }
@@ -32,7 +41,14 @@ void  Error(const char* fmt, ...)
   char  msg[512]  = "Error: ";
   vsnprintf(&msg[7], sizeof(msg) - 7, fmt, args);
   
-  // TODO: either display in editor or terminal
+  if (g_Editor.m_Running)
+  {
+    RenderBar(msg);
+  }
+  else
+  {
+    fprintf(stderr, "%s\n", msg);
+  }
   
   va_end(args);
 }

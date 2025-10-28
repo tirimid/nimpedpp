@@ -13,6 +13,8 @@ extern "C"
 #define OUT
 #define IN_OUT
 
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
+
 using i8    = int8_t;
 using i16   = int16_t;
 using i32   = int32_t;
