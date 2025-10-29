@@ -45,16 +45,31 @@ struct FUNCTIONAL
 
 struct FRAME
 {
-  static constexpr const char*  GREETER_TEXT  = "nimped++\n";
+  static constexpr const char*  GREETER_TEXT  =
+    "\n"
+    "         _                          _\n"
+    "   _ __ (_)_ __ ___  _ __   ___  __| |  _     _\n"
+    "  | '_ \\| | '_ ` _ \\| '_ \\ / _ \\/ _` |_| |_ _| |_\n"
+    "  | | | | | | | | | | |_) |  __/ (_| |_   _|_   _|\n"
+    "  |_| |_|_|_| |_| |_| .__/ \\___|\\__,_| |_|   |_|\n"
+    "                    |_|\n"
+    "\n"
+    "Resources:\n"
+    "\n"
+    "  Source code: https://git.tirimid.net/nimpedpp\n"
+    "  Press C-h to bring up help information\n"
+    "\n"
+    "nimped++ is Free Software licensed under the GNU GPLv3.\n";
+
   static constexpr const char*  HELP_TEXT     = "nimped++ help text\n";
 };
 
 struct VISUAL
 {
   static constexpr char         MARGIN_CHAR   = '|';
-  static constexpr const char*  SCRATCH_NAME  = "-scratch-";
-  static constexpr const char*  BASE_NAME     = "-base-";
-  static constexpr const char*  WRITE_NAME    = "-write-";
+  static constexpr const char*  SCRATCH_NAME  = "(Scratch)";
+  static constexpr const char*  BASE_NAME     = "Base";
+  static constexpr const char*  WRITE_NAME    = "Write";
 };
 
 struct KEYBIND
