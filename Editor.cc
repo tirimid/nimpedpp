@@ -130,3 +130,8 @@ void  DestroyFrame(usize idx)
     --g_Editor.m_CurFrame;
   }
 }
+
+Frame&  CurrentFrame()
+{
+  return (g_Editor.m_Frames[g_Editor.m_CurFrame]);
+}

@@ -21,14 +21,21 @@ static void PromptMoveLeft();
 static void PromptMoveRight();
 static void PromptMoveStart();
 static void PromptMoveEnd();
+static void PromptMoveWordLeft();
+static void PromptMoveWordRight();
 static void Quit();
+static void Exit();
 static void QuitPromptFail();
 static void QuitPromptSuccess();
 static void Next();
 static void Previous();
+static void WriteMode();
 static void FrameDeleteFront();
 static void FrameDeleteBack();
 static void FrameDeleteWord();
+static void PromptDeleteFront();
+static void PromptDeleteBack();
+static void PromptDeleteWord();
 static void Newline();
 static void Undo();
 static void NewFrame();
@@ -57,14 +64,43 @@ static void RecordMacro();
 static void ExecuteMacro();
 static void Help();
 static void Tab();
+static void Complete();
 
 }
 
 void  InstallBaseBinds()
 {
   Unbind();
-  Bind(KEYBIND::FRAME_MOVE_LEFT, Binds::FrameMoveLeft);
-  Bind(KEYBIND::QUIT, Binds::Quit);
+  Bind(KEYBIND::FRAME_MOVE_LEFT,        Binds::FrameMoveLeft);
+  Bind(KEYBIND::FRAME_MOVE_RIGHT,       Binds::FrameMoveRight);
+  Bind(KEYBIND::FRAME_MOVE_UP,          Binds::FrameMoveUp);
+  Bind(KEYBIND::FRAME_MOVE_DOWN,        Binds::FrameMoveDown);
+  Bind(KEYBIND::FRAME_MOVE_START,       Binds::FrameMoveStart);
+  Bind(KEYBIND::FRAME_MOVE_END,         Binds::FrameMoveEnd);
+  Bind(KEYBIND::FRAME_MOVE_WORD_LEFT,   Binds::FrameMoveWordLeft);
+  Bind(KEYBIND::FRAME_MOVE_WORD_RIGHT,  Binds::FrameMoveWordRight);
+  Bind(KEYBIND::QUIT,                   Binds::Quit);
+  Bind(KEYBIND::NEXT,                   Binds::Next);
+  Bind(KEYBIND::PREVIOUS,               Binds::Previous);
+  Bind(KEYBIND::WRITE_MODE,             Binds::WriteMode);
+  Bind(KEYBIND::UNDO,                   Binds::Undo);
+  Bind(KEYBIND::NEW_FRAME,              Binds::NewFrame);
+  Bind(KEYBIND::KILL_FRAME,             Binds::KillFrame);
+  Bind(KEYBIND::SAVE,                   Binds::Save);
+  Bind(KEYBIND::FOCUS,                  Binds::Focus);
+  Bind(KEYBIND::OPEN_FILE,              Binds::OpenFile);
+  Bind(KEYBIND::SEARCH,                 Binds::Search);
+  Bind(KEYBIND::REVERSE_SEARCH,         Binds::ReverseSearch);
+  Bind(KEYBIND::PASTE,                  Binds::Paste);
+  Bind(KEYBIND::COPY_LINE,              Binds::CopyLine);
+  Bind(KEYBIND::CUT_LINE,               Binds::CutLine);
+  Bind(KEYBIND::COPY_LINES,             Binds::CopyLines);
+  Bind(KEYBIND::CUT_LINES,              Binds::CutLines);
+  Bind(KEYBIND::ZOOM,                   Binds::Zoom);
+  Bind(KEYBIND::GOTO,                   Binds::Goto);
+  Bind(KEYBIND::RECORD_MACRO,           Binds::RecordMacro);
+  Bind(KEYBIND::EXECUTE_MACRO,          Binds::ExecuteMacro);
+  Bind(KEYBIND::HELP,                   Binds::Help);
   OrganizeInputs();
   
   g_Editor.m_WriteInput = false;
@@ -74,27 +110,99 @@ void  InstallBaseBinds()
 
 void  InstallWriteBinds()
 {
-  // TODO: implement
+  Unbind();
+  Bind(KEYBIND::EXIT,         Binds::Exit);
+  Bind(KEYBIND::DELETE_FRONT, Binds::FrameDeleteFront);
+  Bind(KEYBIND::DELETE_BACK,  Binds::FrameDeleteBack);
+  Bind(KEYBIND::DELETE_WORD,  Binds::FrameDeleteWord);
+  Bind(KEYBIND::NEWLINE,      Binds::Newline);
+  Bind(KEYBIND::LEFT_PAREN,   Binds::FrameLeftParen);
+  Bind(KEYBIND::LEFT_BRACKET, Binds::FrameLeftBracket);
+  Bind(KEYBIND::LEFT_BRACE,   Binds::FrameLeftBrace);
+  Bind(KEYBIND::DOUBLE_QUOTE, Binds::FrameDoubleQuote);
+  Bind(KEYBIND::TAB,          Binds::Tab);
+  OrganizeInputs();
+  
+  g_Editor.m_WriteInput = true;
+  
+  RenderBar(VISUAL::WRITE_NAME);
 }
 
 void  InstallPromptBinds()
 {
-  // TODO: implement
+  Unbind();
+  Bind(KEYBIND::EXIT,                   Binds::QuitPromptFail);
+  Bind(KEYBIND::NEWLINE,                Binds::QuitPromptSuccess);
+  Bind(KEYBIND::PROMPT_MOVE_LEFT,       Binds::PromptMoveLeft);
+  Bind(KEYBIND::PROMPT_MOVE_RIGHT,      Binds::PromptMoveRight);
+  Bind(KEYBIND::PROMPT_MOVE_START,      Binds::PromptMoveStart);
+  Bind(KEYBIND::PROMPT_MOVE_END,        Binds::PromptMoveEnd);
+  Bind(KEYBIND::PROMPT_MOVE_WORD_LEFT,  Binds::PromptMoveWordLeft);
+  Bind(KEYBIND::PROMPT_MOVE_WORD_RIGHT, Binds::PromptMoveWordRight);
+  Bind(KEYBIND::DELETE_FRONT,           Binds::PromptDeleteFront);
+  Bind(KEYBIND::DELETE_BACK,            Binds::PromptDeleteBack);
+  Bind(KEYBIND::DELETE_WORD,            Binds::PromptDeleteWord);
+  Bind(KEYBIND::LEFT_PAREN,             Binds::PromptLeftParen);
+  Bind(KEYBIND::LEFT_BRACKET,           Binds::PromptLeftBracket);
+  Bind(KEYBIND::LEFT_BRACE,             Binds::PromptLeftBrace);
+  Bind(KEYBIND::DOUBLE_QUOTE,           Binds::PromptDoubleQuote);
+  OrganizeInputs();
+  
+  g_Editor.m_WriteInput = false;
 }
 
 void  InstallPathPromptBinds()
 {
-  // TODO: implement
+  Unbind();
+  Bind(KEYBIND::EXIT,                   Binds::QuitPromptFail);
+  Bind(KEYBIND::NEWLINE,                Binds::QuitPromptSuccess);
+  Bind(KEYBIND::PROMPT_MOVE_LEFT,       Binds::PromptMoveLeft);
+  Bind(KEYBIND::PROMPT_MOVE_RIGHT,      Binds::PromptMoveRight);
+  Bind(KEYBIND::PROMPT_MOVE_START,      Binds::PromptMoveStart);
+  Bind(KEYBIND::PROMPT_MOVE_END,        Binds::PromptMoveEnd);
+  Bind(KEYBIND::PROMPT_MOVE_WORD_LEFT,  Binds::PromptMoveWordLeft);
+  Bind(KEYBIND::PROMPT_MOVE_WORD_RIGHT, Binds::PromptMoveWordRight);
+  Bind(KEYBIND::DELETE_FRONT,           Binds::PromptDeleteFront);
+  Bind(KEYBIND::DELETE_BACK,            Binds::PromptDeleteBack);
+  Bind(KEYBIND::DELETE_WORD,            Binds::PromptDeleteWord);
+  Bind(KEYBIND::COMPLETE,               Binds::Complete);
+  Bind(KEYBIND::LEFT_PAREN,             Binds::PromptLeftParen);
+  Bind(KEYBIND::LEFT_BRACKET,           Binds::PromptLeftBracket);
+  Bind(KEYBIND::LEFT_BRACE,             Binds::PromptLeftBrace);
+  Bind(KEYBIND::DOUBLE_QUOTE,           Binds::PromptDoubleQuote);
+  OrganizeInputs();
+  
+  g_Editor.m_WriteInput = false;
 }
 
 void  InstallConfirmPromptBinds()
 {
-  // TODO: implement
+  Unbind();
+  Bind(KEYBIND::PROMPT_YES, Binds::QuitPromptSuccess);
+  Bind(KEYBIND::PROMPT_NO,  Binds::QuitPromptFail);
+  Bind(KEYBIND::EXIT,       Binds::QuitPromptFail);
+  OrganizeInputs();
+  
+  g_Editor.m_WriteInput = false;
 }
 
 void  InstallNumberPromptBinds()
 {
-  // TODO: implement
+  Unbind();
+  Bind(KEYBIND::EXIT,                   Binds::QuitPromptFail);
+  Bind(KEYBIND::NEWLINE,                Binds::QuitPromptSuccess);
+  Bind(KEYBIND::PROMPT_MOVE_LEFT,       Binds::PromptMoveLeft);
+  Bind(KEYBIND::PROMPT_MOVE_RIGHT,      Binds::PromptMoveRight);
+  Bind(KEYBIND::PROMPT_MOVE_START,      Binds::PromptMoveStart);
+  Bind(KEYBIND::PROMPT_MOVE_END,        Binds::PromptMoveEnd);
+  Bind(KEYBIND::PROMPT_MOVE_WORD_LEFT,  Binds::PromptMoveWordLeft);
+  Bind(KEYBIND::PROMPT_MOVE_WORD_RIGHT, Binds::PromptMoveWordRight);
+  Bind(KEYBIND::DELETE_FRONT,           Binds::PromptDeleteFront);
+  Bind(KEYBIND::DELETE_BACK,            Binds::PromptDeleteBack);
+  Bind(KEYBIND::DELETE_WORD,            Binds::PromptDeleteWord);
+  OrganizeInputs();
+  
+  g_Editor.m_WriteInput = false;
 }
 
 namespace Binds
@@ -102,32 +210,64 @@ namespace Binds
 
 static void FrameMoveLeft()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  if (f.m_Cursor > 0)
+  {
+    --f.m_Cursor;
+    f.SaveCursor();
+  }
 }
 
 static void FrameMoveRight()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  if (f.m_Cursor < f.m_Buffer.m_Length)
+  {
+    ++f.m_Cursor;
+    f.SaveCursor();
+  }
 }
 
 static void FrameMoveUp()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  f.m_Cursor -= f.m_Cursor > 0;
+  while (f.m_Cursor > 0 && f.m_Buffer.m_Data[f.m_Cursor].m_Codepoint != '\n')
+  {
+    --f.m_Cursor;
+  }
+  f.LoadCursor();
 }
 
 static void FrameMoveDown()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  while (f.m_Cursor < f.m_Buffer.m_Length && f.m_Buffer.m_Data[f.m_Cursor].m_Codepoint != '\n')
+  {
+    ++f.m_Cursor;
+  }
+  f.m_Cursor += f.m_Cursor < f.m_Buffer.m_Length;
+  f.LoadCursor();
 }
 
 static void FrameMoveStart()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  while (f.m_Cursor > 0 && f.m_Buffer.m_Data[f.m_Cursor - 1].m_Codepoint != '\n')
+  {
+    --f.m_Cursor;
+  }
+  f.SaveCursor();
 }
 
 static void FrameMoveEnd()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  while (f.m_Cursor < f.m_Buffer.m_Length && f.m_Buffer.m_Data[f.m_Cursor].m_Codepoint != '\n')
+  {
+    ++f.m_Cursor;
+  }
+  f.SaveCursor();
 }
 
 static void FrameMoveWordLeft()
@@ -160,11 +300,26 @@ static void PromptMoveEnd()
   // TODO: implement
 }
 
+static void PromptMoveWordLeft()
+{
+  // TODO: implement
+}
+
+static void PromptMoveWordRight()
+{
+  // TODO: implement
+}
+
 static void Quit()
 {
   // TODO: write logic for unsaved loss prevention
   
   g_Editor.m_Running = false;
+}
+
+static void Exit()
+{
+  InstallBaseBinds();
 }
 
 static void QuitPromptFail()
@@ -187,6 +342,11 @@ static void Previous()
   // TODO: implement
 }
 
+static void WriteMode()
+{
+  InstallWriteBinds();
+}
+
 static void FrameDeleteFront()
 {
   // TODO: implement
@@ -198,6 +358,21 @@ static void FrameDeleteBack()
 }
 
 static void FrameDeleteWord()
+{
+  // TODO: implement
+}
+
+static void PromptDeleteFront()
+{
+  // TODO: implement
+}
+
+static void PromptDeleteBack()
+{
+  // TODO: implement
+}
+
+static void PromptDeleteWord()
 {
   // TODO: implement
 }
@@ -338,6 +513,11 @@ static void Help()
 }
 
 static void Tab()
+{
+  // TODO: implement
+}
+
+static void Complete()
 {
   // TODO: implement
 }

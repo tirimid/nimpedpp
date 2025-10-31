@@ -75,19 +75,19 @@ struct EChar
     
     switch (nBytes)
     {
-    case 2:
+    case (2):
       m_Encoding[1] = ptr[1];
       m_Codepoint |= (ptr[0] & 0x1f) << 6;
       m_Codepoint |= ptr[1] & 0x3f;
       break;
-    case 3:
+    case (3):
       m_Encoding[1] = ptr[1];
       m_Encoding[2] = ptr[2];
       m_Codepoint |= (ptr[0] & 0xf) << 12;
       m_Codepoint |= (ptr[1] & 0x3f) << 6;
       m_Codepoint |= ptr[2] & 0x3f;
       break;
-    case 4:
+    case (4):
       m_Encoding[1] = ptr[1];
       m_Encoding[2] = ptr[2];
       m_Encoding[3] = ptr[3];

@@ -127,11 +127,11 @@ void  Frame::Render(u32 x, u32 y, u32 w, u32 h, bool active) const
     u32 cw  {};
     switch (m_Buffer.m_Data[i].m_Codepoint)
     {
-    case '\n':
+    case ('\n'):
       cx = 0;
       ++cy;
       continue;
-    case '\t':
+    case ('\t'):
       cw = g_Options.m_TabSize - cx % g_Options.m_TabSize;
       break;
     default:
@@ -224,12 +224,52 @@ void  Frame::BreakHistory()
 
 void  Frame::SaveCursor()
 {
-  // TODO: implement
+  u32 lineBegin = m_Cursor;
+  while (lineBegin > 0 && m_Buffer.m_Data[lineBegin - 1].m_Codepoint != '\n')
+  {
+    --lineBegin;
+  }
+  
+  u32 i = lineBegin;
+  for (u32 cx = 0; i < m_Cursor; ++i)
+  {
+    switch (m_Buffer.m_Data[i].m_Codepoint)
+    {
+    case ('\t'):
+      cx += g_Options.m_TabSize - cx % g_Options.m_TabSize;
+      break;
+    default:
+      ++cx;
+      break;
+    }
+  }
+  
+  m_SavedCursorX = i;
 }
 
 void  Frame::LoadCursor()
 {
-  // TODO: implement
+  u32 lineBegin = m_Cursor;
+  while (lineBegin > 0 && m_Buffer.m_Data[lineBegin - 1].m_Codepoint != '\n')
+  {
+    --lineBegin;
+  }
+  
+  u32 i = lineBegin;
+  for (u32 cx = 0; i < m_Buffer.m_Length && m_Buffer.m_Data[i].m_Codepoint != '\n' && cx < m_SavedCursorX; ++i)
+  {
+    switch (m_Buffer.m_Data[i].m_Codepoint)
+    {
+    case ('\t'):
+      cx += g_Options.m_TabSize - cx % g_Options.m_TabSize;
+      break;
+    default:
+      ++cx;
+      break;
+    }
+  }
+  
+  m_Cursor = i;
 }
 
 void  Frame::ComputeBounds(u32 w, u32 h)
@@ -272,11 +312,11 @@ void  Frame::ComputeBounds(u32 w, u32 h)
     u32 cw  {};
     switch (m_Buffer.m_Data[i].m_Codepoint)
     {
-    case '\n':
+    case ('\n'):
       cx = 0;
       ++cy;
       continue;
-    case '\t':
+    case ('\t'):
       cw = g_Options.m_TabSize - cx % g_Options.m_TabSize;
       break;
     default:
@@ -298,11 +338,11 @@ void  Frame::ComputeBounds(u32 w, u32 h)
     u32 cw  {};
     switch (m_Buffer.m_Data[m_Start].m_Codepoint)
     {
-    case '\n':
+    case ('\n'):
       cx = 0;
       --cy;
       continue;
-    case '\t':
+    case ('\t'):
       cw = g_Options.m_TabSize - cx % g_Options.m_TabSize;
       break;
     default:

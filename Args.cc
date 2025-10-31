@@ -15,13 +15,13 @@ i32 ParseArgs(i32 argc, char* argv[])
   {
     switch (ch)
     {
-    case 'c':
+    case ('c'):
       g_Args.m_CreateFiles = true;
       break;
-    case 'h':
+    case ('h'):
       Usage(argv[0]);
       exit(0);
-    case 'o':
+    case ('o'):
       g_Args.m_ConfigDir = optarg;
       break;
     default:

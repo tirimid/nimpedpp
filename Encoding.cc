@@ -226,7 +226,7 @@ EChar ReadEChar(FILE* file)
   u32 codepoint = 0;
   switch (nBytes)
   {
-  case 2:
+  case (2):
   {
     i32 secondByte  = fgetc(file);
     if (secondByte == EOF)
@@ -239,7 +239,7 @@ EChar ReadEChar(FILE* file)
     
     break;
   }
-  case 3:
+  case (3):
   {
     i32 secondByte  = fgetc(file);
     i32 thirdByte   = fgetc(file);
@@ -254,7 +254,7 @@ EChar ReadEChar(FILE* file)
     
     break;
   }
-  case 4:
+  case (4):
   {
     i32 secondByte  = fgetc(file);
     i32 thirdByte   = fgetc(file);

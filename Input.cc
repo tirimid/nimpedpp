@@ -133,12 +133,12 @@ EChar ReadKey()
     
     switch (CompareBinds(&otherBind, &g_Binds[mid]))
     {
-    case -1:
+    case (-1):
       high = mid - 1;
       break;
-    case 0:
+    case (0):
       goto found;
-    case 1:
+    case (1):
       low = mid + 1;
       break;
     }
