@@ -272,12 +272,30 @@ static void FrameMoveEnd()
 
 static void FrameMoveWordLeft()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  while (f.m_Cursor && !f.m_Buffer.m_Data[f.m_Cursor - 1].IsAlnum())
+  {
+    --f.m_Cursor;
+  }
+  while (f.m_Cursor && f.m_Buffer.m_Data[f.m_Cursor - 1].IsAlnum())
+  {
+    --f.m_Cursor;
+  }
+  f.SaveCursor();
 }
 
 static void FrameMoveWordRight()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  while (f.m_Cursor < f.m_Buffer.m_Length && !f.m_Buffer.m_Data[f.m_Cursor].IsAlnum())
+  {
+    ++f.m_Cursor;
+  }
+  while (f.m_Cursor < f.m_Buffer.m_Length && f.m_Buffer.m_Data[f.m_Cursor].IsAlnum())
+  {
+    ++f.m_Cursor;
+  }
+  f.SaveCursor();
 }
 
 static void PromptMoveLeft()

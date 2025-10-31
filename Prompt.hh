@@ -21,3 +21,14 @@ struct Prompt
 };
 
 extern Prompt g_Prompt;
+
+void    BeginPrompt(OWNS EString str);
+void    BeginPrompt(const char* str);
+void    EndPrompt();
+void    PromptWrite(EChar ch, u32 pos);
+void    PromptWrite(const EString& str, u32 pos);
+void    PromptErase(u32 lowerBound, u32 upperBound);
+void    PromptRender();
+EString PromptData();
+void    CompletePromptPath();
+bool    WritableToPrompt(EChar ch);

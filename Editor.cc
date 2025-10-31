@@ -45,7 +45,7 @@ void  EditorLoop()
     RenderPresent();
     
     EChar input = ReadKey();
-    if (g_Editor.m_WriteInput && IsWritable(input))
+    if (g_Editor.m_WriteInput && WritableToEditor(input))
     {
       // TODO: echo input characters into buffer when m_WriteInput
     }
@@ -103,7 +103,7 @@ void  RenderEditor()
   }
 }
 
-bool  IsWritable(EChar ch)
+bool  WritableToEditor(EChar ch)
 {
   // input returns replacement unicode character on non-writing key, and it is rare that a user wants to input a replacement
   // character, so they are all just considered non-writable.

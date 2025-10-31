@@ -230,8 +230,8 @@ void  Frame::SaveCursor()
     --lineBegin;
   }
   
-  u32 i = lineBegin;
-  for (u32 cx = 0; i < m_Cursor; ++i)
+  u32 cx = 0;
+  for (u32 i = lineBegin; i < m_Cursor; ++i)
   {
     switch (m_Buffer.m_Data[i].m_Codepoint)
     {
@@ -244,7 +244,7 @@ void  Frame::SaveCursor()
     }
   }
   
-  m_SavedCursorX = i;
+  m_SavedCursorX = cx;
 }
 
 void  Frame::LoadCursor()
