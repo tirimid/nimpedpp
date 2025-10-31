@@ -47,7 +47,10 @@ void  EditorLoop()
     EChar input = ReadKey();
     if (g_Editor.m_WriteInput && WritableToEditor(input))
     {
-      // TODO: echo input characters into buffer when m_WriteInput
+      Frame&  f = CurrentFrame();
+      f.Write(input, f.m_Cursor);
+      ++f.m_Cursor;
+      f.SaveCursor();
     }
   }
 }
@@ -81,7 +84,7 @@ void  ArrangeFrame(usize idx, OUT u32& x, OUT u32& y, OUT u32& w, OUT u32& h)
     x = g_Options.m_MasterNumer * renderWidth / g_Options.m_MasterDenom;
     w = renderWidth - x;
     
-    if (x + y > renderHeight || idx == g_Editor.m_NFrames - 1)
+    if (y + h > renderHeight || idx == g_Editor.m_NFrames - 1)
     {
       h = renderHeight - y;
     }

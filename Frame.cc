@@ -10,9 +10,18 @@
 void  Frame::Free()
 {
   m_Buffer.Free();
+  
   if (m_Source)
   {
     free(m_Source);
+  }
+  
+  for (u32 i = 0; i < m_HistoryLength; ++i)
+  {
+    if (m_History[i].m_Type == HISTORY_ERASE)
+    {
+      free(m_History[i].m_Erase.m_Data);
+    }
   }
   free(m_History);
 }
@@ -199,27 +208,118 @@ i32 Frame::Save()
 
 void  Frame::Write(EChar ch, u32 pos)
 {
-  // TODO: implement
+  EString str {};
+  str.m_Data    = &ch;
+  str.m_Length  = 1;
+  Write(str, pos);
 }
 
 void  Frame::Write(const EString& str, u32 pos)
 {
-  // TODO: implement
+  // modify buffer
+  m_Buffer.Insert(str, pos);
+  m_Flags |= FRAME_UNSAVED;
+  
+  // push history entry
+  History*  history = m_HistoryLength ? &m_History[m_HistoryLength - 1] : nullptr;
+  if (history && history->m_Type == HISTORY_WRITE && history->m_Write.m_UpperBound == pos)
+  {
+    history->m_Write.m_UpperBound = pos + str.m_Length;
+  }
+  else
+  {
+    if (m_HistoryLength >= m_HistoryCapacity)
+    {
+      m_HistoryCapacity *= 2;
+      m_History = (History*)reallocarray(m_History, m_HistoryCapacity, sizeof(History));
+    }
+    
+    m_History[m_HistoryLength++] = (History)
+    {
+      .m_Write =
+      {
+        .m_Type       = HISTORY_WRITE,
+        .m_LowerBound = pos,
+        .m_UpperBound = pos + str.m_Length
+      }
+    };
+  }
 }
 
 void  Frame::Erase(u32 lb, u32 ub)
 {
-  // TODO: implement
+  // push history entry
+  History*  history = m_HistoryLength ? &m_History[m_HistoryLength - 1] : nullptr;
+  if (history && history->m_Type == HISTORY_ERASE && history->m_Erase.m_LowerBound == ub)
+  {
+    history->m_Erase.m_Data = (EChar*)reallocarray(history->m_Erase.m_Data, history->m_Erase.m_UpperBound - lb, sizeof(EChar));
+    memmove(
+      &history->m_Erase.m_Data[ub - lb],
+      history->m_Erase.m_Data,
+      sizeof(EChar) * (history->m_Erase.m_UpperBound - history->m_Erase.m_LowerBound)
+    );
+    memcpy(history->m_Erase.m_Data, &m_Buffer.m_Data[lb], sizeof(EChar) * (ub - lb));
+    history->m_Erase.m_LowerBound = lb;
+  }
+  else
+  {
+    // TODO: implement push new history entry
+  }
+  
+  // modify buffer
+  m_Buffer.Erase(lb, ub);
+  m_Flags |= FRAME_UNSAVED;
 }
 
 void  Frame::Undo()
 {
-  // TODO: implement
+  while (m_HistoryLength && m_History[m_HistoryLength - 1].m_Type == HISTORY_BREAK)
+  {
+    --m_HistoryLength;
+  }
+  
+  if (!m_HistoryLength)
+  {
+    return;
+  }
+  
+  const History*  history = &m_History[m_HistoryLength - 1];
+  switch (history->m_Type)
+  {
+  case (HISTORY_WRITE):
+    m_Buffer.Erase(history->m_Write.m_LowerBound, history->m_Write.m_UpperBound);
+    m_Cursor = history->m_Write.m_LowerBound;
+    m_Flags |= FRAME_UNSAVED;
+    break;
+  case (HISTORY_ERASE):
+    m_Buffer.Insert(
+      history->m_Erase.m_Data,
+      history->m_Erase.m_UpperBound - history->m_Erase.m_LowerBound,
+      history->m_Erase.m_LowerBound
+    );
+    m_Cursor = history->m_Erase.m_UpperBound;
+    m_Flags |= FRAME_UNSAVED;
+    free(history->m_Erase.m_Data);
+    break;
+  default:
+    break;
+  }
+  
+  --m_HistoryLength;
 }
 
 void  Frame::BreakHistory()
 {
-  // TODO: implement
+  if (m_HistoryLength >= m_HistoryCapacity)
+  {
+    m_HistoryCapacity *= 2;
+    m_History = (History*)reallocarray(m_History, m_HistoryCapacity, sizeof(History));
+  }
+  
+  m_History[m_HistoryLength++] = (History)
+  {
+    .m_Type = HISTORY_BREAK
+  };
 }
 
 void  Frame::SaveCursor()
@@ -356,7 +456,30 @@ void  Frame::ComputeBounds(u32 w, u32 h)
 
 u32 Frame::Tabulate(u32 at)
 {
-  // TODO: implement
+  if (g_Options.m_TabSpaces)
+  {
+    u32 lineBegin = at;
+    while (lineBegin && m_Buffer.m_Data[lineBegin - 1].m_Codepoint != '\n')
+    {
+      --lineBegin;
+    }
+    
+    u32 linePos = at - lineBegin;
+    u32 nSpaces = g_Options.m_TabSize - linePos % g_Options.m_TabSize;
+    while (nSpaces)
+    {
+      Write(' ', at);
+      ++at;
+      --nSpaces;
+    }
+    
+    return (at);
+  }
+  else
+  {
+    Write('\t', at);
+    return (at + 1);
+  }
 }
 
 void  EmptyFrame(OUT Frame& frame)

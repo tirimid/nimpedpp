@@ -4,6 +4,7 @@
 #include <Editor.hh>
 #include <Input.hh>
 #include <Options.hh>
+#include <Prompt.hh>
 #include <Render.hh>
 
 namespace Binds
@@ -402,7 +403,14 @@ static void Newline()
 
 static void Undo()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  if (!f.m_HistoryLength)
+  {
+    Info("Binds: Nothing to undo");
+    return;
+  }
+  
+  f.Undo();
 }
 
 static void NewFrame()
@@ -517,27 +525,48 @@ static void Goto()
 
 static void RecordMacro()
 {
-  // TODO: implement
+  if (!IsRecordingMacro())
+  {
+    Info("Binds: Recording macro");
+    RecordMacro();
+  }
 }
 
 static void ExecuteMacro()
 {
-  // TODO: implement
+  if (IsRecordingMacro())
+  {
+    Info("Binds: Stopped recording macro");
+    StopRecordingMacro();
+  }
+  else
+  {
+    Info("Binds: Executing macro");
+    ExecuteMacro();
+  }
 }
 
 static void Help()
 {
-  // TODO: implement
+  if (g_Editor.m_NFrames >= FUNCTIONAL::MAX_FILES)
+  {
+    Error("Binds: Cannot open more than %u frames, kill some using C-k!", FUNCTIONAL::MAX_FILES);
+    return;
+  }
+  
+  // TODO: implement help menu
 }
 
 static void Tab()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  f.m_Cursor = f.Tabulate(f.m_Cursor);
+  f.SaveCursor();
 }
 
 static void Complete()
 {
-  // TODO: implement
+  CompletePromptPath();
 }
 
 }
