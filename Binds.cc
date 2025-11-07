@@ -301,22 +301,22 @@ static void FrameMoveWordRight()
 
 static void PromptMoveLeft()
 {
-  // TODO: implement
+  g_Prompt.m_Cursor -= (u32)g_Prompt.m_Cursor > g_Prompt.m_Start;
 }
 
 static void PromptMoveRight()
 {
-  // TODO: implement
+  g_Prompt.m_Cursor += (u32)g_Prompt.m_Cursor < g_Prompt.m_Data.m_Length;
 }
 
 static void PromptMoveStart()
 {
-  // TODO: implement
+  g_Prompt.m_Cursor = g_Prompt.m_Start;
 }
 
 static void PromptMoveEnd()
 {
-  // TODO: implement
+  g_Prompt.m_Cursor = g_Prompt.m_Data.m_Length;
 }
 
 static void PromptMoveWordLeft()
@@ -331,7 +331,34 @@ static void PromptMoveWordRight()
 
 static void Quit()
 {
-  // TODO: write logic for unsaved loss prevention
+  for (usize i = 0; i < g_Editor.m_NFrames; ++i)
+  {
+    if (!(g_Editor.m_Frames[i].m_Flags & FRAME_UNSAVED))
+    {
+      continue;
+    }
+    
+    InstallConfirmPromptBinds();
+    BeginPrompt("Frames have unsaved changes, quit anyway? (y/n)");
+    g_Prompt.m_Cursor = -1;
+    while (!g_Prompt.m_Status)
+    {
+      RenderEditor();
+      RenderPrompt();
+      RenderPresent();
+      
+      ReadKey();
+    }
+    EndPrompt();
+    
+    if (g_Prompt.m_Status == PROMPT_FAIL)
+    {
+      InstallBaseBinds();
+      return;
+    }
+    
+    break;
+  }
   
   g_Editor.m_Running = false;
 }
@@ -343,12 +370,12 @@ static void Exit()
 
 static void QuitPromptFail()
 {
-  // TODO: implement
+  g_Prompt.m_Status = PROMPT_FAIL;
 }
 
 static void QuitPromptSuccess()
 {
-  // TODO: implement
+  g_Prompt.m_Status = PROMPT_SUCCESS;
 }
 
 static void Next()
@@ -368,7 +395,11 @@ static void WriteMode()
 
 static void FrameDeleteFront()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  if (f.m_Cursor < f.m_Buffer.m_Length)
+  {
+    f.Erase(f.m_Cursor, f.m_Cursor + 1);
+  }
 }
 
 static void FrameDeleteBack()
@@ -440,52 +471,166 @@ static void OpenFile()
 
 static void Search()
 {
-  // TODO: implement
+  InstallPromptBinds();
+  BeginPrompt("Search literally: ");
+  while (!g_Prompt.m_Status)
+  {
+    RenderEditor();
+    RenderPrompt();
+    RenderPresent();
+    
+    EChar key = ReadKey();
+    if (WritableToPrompt(key))
+    {
+      PromptWrite(key, g_Prompt.m_Cursor);
+      ++g_Prompt.m_Cursor;
+    }
+  }
+  EndPrompt();
+  InstallBaseBinds();
+  
+  if (g_Prompt.m_Status == PROMPT_FAIL)
+  {
+    return;
+  }
+  
+  Frame&  f       = CurrentFrame();
+  EString needle  = PromptData();
+  if (needle.m_Length == 0)
+  {
+    needle.Free();
+    return;
+  }
+  
+  for (usize i = f.m_Cursor + 1; i + needle.m_Length <= f.m_Buffer.m_Length; ++i)
+  {
+    for (usize j = 0; j < needle.m_Length; ++j)
+    {
+      if (needle.m_Data[j].m_Codepoint != f.m_Buffer.m_Data[i + j].m_Codepoint)
+      {
+        goto nextChar;
+      }
+    }
+    
+    f.m_Cursor = i;
+    f.SaveCursor();
+    needle.Free();
+    return;
+  nextChar:;
+  }
+  
+  Info("Binds: Didn't find search string");
+  needle.Free();
 }
 
 static void ReverseSearch()
 {
-  // TODO: implement
+  InstallPromptBinds();
+  BeginPrompt("Reverse search literally: ");
+  while (!g_Prompt.m_Status)
+  {
+    RenderEditor();
+    RenderPrompt();
+    RenderPresent();
+    
+    EChar key = ReadKey();
+    if (WritableToPrompt(key))
+    {
+      PromptWrite(key, g_Prompt.m_Cursor);
+      ++g_Prompt.m_Cursor;
+    }
+  }
+  EndPrompt();
+  InstallBaseBinds();
+  
+  if (g_Prompt.m_Status == PROMPT_FAIL)
+  {
+    return;
+  }
+  
+  Frame&  f       = CurrentFrame();
+  EString needle  = PromptData();
+  if (needle.m_Length == 0)
+  {
+    needle.Free();
+    return;
+  }
+  
+  for (isize i = f.m_Cursor; i >= (isize)needle.m_Length; --i)
+  {
+    for (isize j = 0; j < (isize)needle.m_Length; ++j)
+    {
+      if (needle.m_Data[j].m_Codepoint != f.m_Buffer.m_Data[i - needle.m_Length + j].m_Codepoint)
+      {
+        goto nextChar;
+      }
+    }
+    
+    f.m_Cursor = i - needle.m_Length;
+    f.SaveCursor();
+    needle.Free();
+    return;
+  nextChar:;
+  }
+  
+  Info("Binds: Didn't find search string");
+  needle.Free();
 }
 
 static void FrameLeftParen()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  f.Write("()", f.m_Cursor);
+  ++f.m_Cursor;
+  f.SaveCursor();
 }
 
 static void FrameLeftBracket()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  f.Write("[]", f.m_Cursor);
+  ++f.m_Cursor;
+  f.SaveCursor();
 }
 
 static void FrameLeftBrace()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  f.Write("{}", f.m_Cursor);
+  ++f.m_Cursor;
+  f.SaveCursor();
 }
 
 static void FrameDoubleQuote()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  f.Write("\"\"", f.m_Cursor);
+  ++f.m_Cursor;
+  f.SaveCursor();
 }
 
 static void PromptLeftParen()
 {
-  // TODO: implement
+  PromptWrite("()", g_Prompt.m_Cursor);
+  ++g_Prompt.m_Cursor;
 }
 
 static void PromptLeftBracket()
 {
-  // TODO: implement
+  PromptWrite("[]", g_Prompt.m_Cursor);
+  ++g_Prompt.m_Cursor;
 }
 
 static void PromptLeftBrace()
 {
-  // TODO: implement
+  PromptWrite("{}", g_Prompt.m_Cursor);
+  ++g_Prompt.m_Cursor;
 }
 
 static void PromptDoubleQuote()
 {
-  // TODO: implement
+  PromptWrite("\"\"", g_Prompt.m_Cursor);
+  ++g_Prompt.m_Cursor;
 }
 
 static void Paste()
@@ -515,7 +660,15 @@ static void CutLines()
 
 static void Zoom()
 {
-  // TODO: implement
+  u32 x {};
+  u32 y {};
+  u32 w {};
+  u32 h {};
+  ArrangeFrame(g_Editor.m_CurFrame, x, y, w, h);
+  
+  Frame&  f = CurrentFrame();
+  f.m_Start = 0;
+  f.ComputeBounds(w, h / 2);
 }
 
 static void Goto()
@@ -554,7 +707,8 @@ static void Help()
     return;
   }
   
-  // TODO: implement help menu
+  StringFrame(g_Editor.m_Frames[g_Editor.m_NFrames++], FRAME::HELP_TEXT);
+  g_Editor.m_CurFrame = g_Editor.m_NFrames - 1;
 }
 
 static void Tab()

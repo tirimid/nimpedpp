@@ -62,14 +62,19 @@ static void Usage(const char* name)
   fprintf(
     stderr,
     "nimped++\n"
+    "Referenced as: %s\n"
     "\n"
     "Usage:\n"
-    "\t%s [options] files\n"
+    "  %s [options] files\n"
     "\n"
     "Options:\n"
-    "\t-c      Create files if they don't exist\n"
-    "\t-h      Display this help information\n"
-    "\t-o dir  Use a different config directory\n",
+    "  -c           Create files if they don't exist\n"
+    "  -h           Display this help information\n"
+    "  -o dir       Use a different config directory\n"
+    "\n"
+    "Additional resources:\n"
+    "  Source code  https://git.tirimid.net/nimpedpp\n",
+    name,
     name
   );
 }

@@ -19,7 +19,7 @@ void  Info(const char* fmt, ...)
   va_start(args, fmt);
   
   char  msg[512]  = "Info: ";
-  vsnprintf(&msg[5], sizeof(msg) - 6, fmt, args);
+  vsnprintf(&msg[6], sizeof(msg) - 6, fmt, args);
   
   if (g_Editor.m_Running)
   {

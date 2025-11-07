@@ -246,6 +246,38 @@ void  Frame::Write(const EString& str, u32 pos)
   }
 }
 
+void  Frame::Write(const char* str, u32 pos)
+{
+  // modify buffer
+  m_Buffer.Insert(str, pos);
+  m_Flags |= FRAME_UNSAVED;
+  
+  // push history entry
+  History*  history = m_HistoryLength ? &m_History[m_HistoryLength - 1] : nullptr;
+  if (history && history->m_Type == HISTORY_WRITE && history->m_Write.m_UpperBound == pos)
+  {
+    history->m_Write.m_UpperBound = pos + strlen(str);
+  }
+  else
+  {
+    if (m_HistoryLength >= m_HistoryCapacity)
+    {
+      m_HistoryCapacity *= 2;
+      m_History = (History*)reallocarray(m_History, m_HistoryCapacity, sizeof(History));
+    }
+    
+    m_History[m_HistoryLength++] = (History)
+    {
+      .m_Write =
+      {
+        .m_Type       = HISTORY_WRITE,
+        .m_LowerBound = pos,
+        .m_UpperBound = pos + (u32)strlen(str)
+      }
+    };
+  }
+}
+
 void  Frame::Erase(u32 lb, u32 ub)
 {
   // push history entry
@@ -263,7 +295,24 @@ void  Frame::Erase(u32 lb, u32 ub)
   }
   else
   {
-    // TODO: implement push new history entry
+    if (m_HistoryLength >= m_HistoryCapacity)
+    {
+      m_HistoryCapacity *= 2;
+      m_History = (History*)reallocarray(m_History, m_HistoryCapacity, sizeof(History));
+    }
+    
+    EChar*  data  = (EChar*)calloc(ub - lb, sizeof(EChar));
+    memcpy(data, &m_Buffer.m_Data[lb], sizeof(EChar) * (ub - lb));
+    m_History[m_HistoryLength++] = (History)
+    {
+      .m_Erase =
+      {
+        .m_Type       = HISTORY_ERASE,
+        .m_LowerBound = lb,
+        .m_UpperBound = ub,
+        .m_Data       = data
+      }
+    };
   }
   
   // modify buffer

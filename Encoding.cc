@@ -209,12 +209,56 @@ void  EString::Insert(const EString& str, u32 pos)
 
 void  EString::Insert(const EChar* str, u32 length, u32 pos)
 {
-  // TODO: implement
+  u32 newCapacity = m_Capacity;
+  for (usize i = 1; i <= length; ++i)
+  {
+    if (m_Length + i > newCapacity)
+    {
+      newCapacity *= 2;
+    }
+  }
+  
+  if (newCapacity != m_Capacity)
+  {
+    m_Capacity = newCapacity;
+    m_Data = (EChar*)reallocarray(m_Data, m_Capacity, sizeof(EChar));
+  }
+  
+  memmove(&m_Data[pos + length], &m_Data[pos], sizeof(EChar) * (m_Length - pos));
+  memcpy(&m_Data[pos], str, sizeof(EChar) * length);
+  m_Length += length;
+}
+
+void  EString::Insert(const char* str, u32 pos)
+{
+  u32 length      = strlen(str);
+  u32 newCapacity = m_Capacity;
+  for (usize i = 1; i <= length; ++i)
+  {
+    if (m_Length + i > newCapacity)
+    {
+      newCapacity *= 2;
+    }
+  }
+  
+  if (newCapacity != m_Capacity)
+  {
+    m_Capacity = newCapacity;
+    m_Data = (EChar*)reallocarray(m_Data, m_Capacity, sizeof(EChar));
+  }
+  
+  memmove(&m_Data[pos + length], &m_Data[pos], sizeof(EChar) * (m_Length - pos));
+  for (usize i = 0; i < length; ++i)
+  {
+    m_Data[pos + i] = str[i];
+  }
+  m_Length += length;
 }
 
 void  EString::Erase(u32 lb, u32 ub)
 {
-  // TODO: implement
+  memmove(&m_Data[lb], &m_Data[ub], sizeof(EChar) * (m_Length - ub));
+  m_Length -= ub - lb;
 }
 
 EString::EString()

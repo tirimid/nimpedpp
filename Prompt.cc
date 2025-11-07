@@ -11,15 +11,15 @@ Prompt  g_Prompt =
 void  BeginPrompt(OWNS EString str)
 {
   g_Prompt.m_Data.Free();
-  g_Prompt.m_Data = str;
+  g_Prompt.m_Data   = str;
+  g_Prompt.m_Start  = str.m_Length;
   g_Prompt.m_Cursor = str.m_Length;
   g_Prompt.m_Status = PROMPT_NONE;
 }
 
 void  BeginPrompt(const char* str)
 {
-  EString eString = str;
-  BeginPrompt(eString);
+  BeginPrompt(EString{str});
 }
 
 void  EndPrompt()
@@ -29,28 +29,27 @@ void  EndPrompt()
 
 void  PromptWrite(EChar ch, u32 pos)
 {
-  // TODO: implement
+  g_Prompt.m_Data.Insert(ch, pos);
 }
 
 void  PromptWrite(const EString& str, u32 pos)
 {
-  // TODO: implement
+  g_Prompt.m_Data.Insert(str, pos);
+}
+
+void  PromptWrite(const char* str, u32 pos)
+{
+  g_Prompt.m_Data.Insert(str, pos);
 }
 
 void  PromptErase(u32 lowerBound, u32 upperBound)
 {
-  // TODO: implement
+  g_Prompt.m_Data.Erase(lowerBound, upperBound);
 }
 
-void  PromptRender()
+void  RenderPrompt()
 {
   RenderBar(g_Prompt.m_Data.Copy());
-}
-
-EString PromptData()
-{
-  EString copy  = g_Prompt.m_Data.Copy();
-  return (copy);
 }
 
 void  CompletePromptPath()
@@ -63,4 +62,11 @@ bool  WritableToPrompt(EChar ch)
   bool  typeable  = ch.IsPrint();
   bool  ignored   = ch.m_Codepoint == REPLACEMENT_CHAR;
   return (typeable && !ignored);
+}
+
+EString PromptData()
+{
+  EString data  = g_Prompt.m_Data.Copy();
+  data.Erase(0, g_Prompt.m_Start);
+  return (data);
 }

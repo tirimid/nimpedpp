@@ -117,6 +117,7 @@ struct EString
   void    Insert(EChar ch, u32 pos);
   void    Insert(const EString& str, u32 pos);
   void    Insert(const EChar* str, u32 length, u32 pos);
+  void    Insert(const char* str, u32 pos);
   void    Erase(u32 lb, u32 ub);
   
   EString();
