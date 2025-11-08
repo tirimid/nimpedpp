@@ -155,3 +155,10 @@ i32 CreateFile(const char* path)
   fclose(file);
   return (0);
 }
+
+const char* FileExtension(const char *path)
+{
+  const char* s = strrchr(path, '.');
+  s = s ? s + 1 : "";
+  return (s);
+}

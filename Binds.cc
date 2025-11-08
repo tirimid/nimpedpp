@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <Binds.hh>
+#include <cstdlib>
 #include <Editor.hh>
 #include <Input.hh>
 #include <Options.hh>
@@ -59,6 +60,8 @@ static void CopyLine();
 static void CutLine();
 static void CopyLines();
 static void CutLines();
+static void CopyUntilLine();
+static void CutUntilLine();
 static void Zoom();
 static void Goto();
 static void RecordMacro();
@@ -97,6 +100,8 @@ void  InstallBaseBinds()
   Bind(KEYBIND::CUT_LINE,               Binds::CutLine);
   Bind(KEYBIND::COPY_LINES,             Binds::CopyLines);
   Bind(KEYBIND::CUT_LINES,              Binds::CutLines);
+  Bind(KEYBIND::COPY_UNTIL_LINE,        Binds::CopyUntilLine);
+  Bind(KEYBIND::CUT_UNTIL_LINE,         Binds::CutUntilLine);
   Bind(KEYBIND::ZOOM,                   Binds::Zoom);
   Bind(KEYBIND::GOTO,                   Binds::Goto);
   Bind(KEYBIND::RECORD_MACRO,           Binds::RecordMacro);
@@ -321,12 +326,26 @@ static void PromptMoveEnd()
 
 static void PromptMoveWordLeft()
 {
-  // TODO: implement
+  while ((u32)g_Prompt.m_Cursor > g_Prompt.m_Start && !g_Prompt.m_Data.m_Data[g_Prompt.m_Cursor - 1].IsAlnum())
+  {
+    --g_Prompt.m_Cursor;
+  }
+  while ((u32)g_Prompt.m_Cursor > g_Prompt.m_Start && g_Prompt.m_Data.m_Data[g_Prompt.m_Cursor - 1].IsAlnum())
+  {
+    --g_Prompt.m_Cursor;
+  }
 }
 
 static void PromptMoveWordRight()
 {
-  // TODO: implement
+  while ((u32)g_Prompt.m_Cursor < g_Prompt.m_Data.m_Length && !g_Prompt.m_Data.m_Data[g_Prompt.m_Cursor].IsAlnum())
+  {
+    ++g_Prompt.m_Cursor;
+  }
+  while ((u32)g_Prompt.m_Cursor < g_Prompt.m_Data.m_Length && g_Prompt.m_Data.m_Data[g_Prompt.m_Cursor].IsAlnum())
+  {
+    ++g_Prompt.m_Cursor;
+  }
 }
 
 static void Quit()
@@ -380,12 +399,12 @@ static void QuitPromptSuccess()
 
 static void Next()
 {
-  // TODO: implement
+  g_Editor.m_CurFrame = g_Editor.m_CurFrame == g_Editor.m_NFrames - 1 ? 0 : g_Editor.m_CurFrame + 1;
 }
 
 static void Previous()
 {
-  // TODO: implement
+  g_Editor.m_CurFrame = g_Editor.m_CurFrame == 0 ? g_Editor.m_NFrames - 1 : g_Editor.m_CurFrame - 1;
 }
 
 static void WriteMode()
@@ -398,38 +417,211 @@ static void FrameDeleteFront()
   Frame&  f = CurrentFrame();
   if (f.m_Cursor < f.m_Buffer.m_Length)
   {
-    f.Erase(f.m_Cursor, f.m_Cursor + 1);
+    f.Erase(f.m_Cursor);
   }
 }
 
 static void FrameDeleteBack()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  if (f.m_Cursor == 0)
+  {
+    return;
+  }
+  
+  if (f.m_Cursor < f.m_Buffer.m_Length)
+  {
+    u32 prev  = f.m_Buffer.m_Data[f.m_Cursor - 1].m_Codepoint;
+    u32 cur   = f.m_Buffer.m_Data[f.m_Cursor].m_Codepoint;
+    if ((prev == '(' && cur == ')') || (prev == '[' && cur == ']') || (prev == '{' && cur == '}') || (prev == '"' && cur == '"'))
+    {
+      --f.m_Cursor;
+      f.Erase(f.m_Cursor, f.m_Cursor + 2);
+      f.SaveCursor();
+      return;
+    }
+  }
+  
+  if (g_Options.m_TabSpaces && g_Options.m_TabSize != 1)
+  {
+    // deletion of tabspace indentation requires special handling
+    --f.m_Cursor;
+    bool  done  = !f.m_Buffer.m_Data[f.m_Cursor].IsSpace();
+    f.Erase(f.m_Cursor);
+    
+    if (!done)
+    {
+      u32 lineBegin = f.m_Cursor;
+      while (lineBegin && f.m_Buffer.m_Data[lineBegin - 1].m_Codepoint != '\n')
+      {
+        --lineBegin;
+      }
+      
+      u32 linePos     = f.m_Cursor - lineBegin;
+      u32 lastIndent  = linePos / g_Options.m_TabSize * g_Options.m_TabSize;
+      while (linePos > lastIndent && f.m_Buffer.m_Data[f.m_Cursor - 1].m_Codepoint == ' ')
+      {
+        --f.m_Cursor;
+        f.Erase(f.m_Cursor);
+        --linePos;
+      }
+    }
+    
+    f.SaveCursor();
+  }
+  else
+  {
+    --f.m_Cursor;
+    f.Erase(f.m_Cursor);
+    f.SaveCursor();
+  }
 }
 
 static void FrameDeleteWord()
 {
-  // TODO: implement
+  Frame&  f           = CurrentFrame();
+  u32     upperBound  = f.m_Cursor;
+  while (f.m_Cursor > 0 && !f.m_Buffer.m_Data[f.m_Cursor - 1].IsAlnum())
+  {
+    --f.m_Cursor;
+  }
+  while (f.m_Cursor > 0 && f.m_Buffer.m_Data[f.m_Cursor - 1].IsAlnum())
+  {
+    --f.m_Cursor;
+  }
+  f.SaveCursor();
+  
+  if (f.m_Cursor < upperBound)
+  {
+    f.Erase(f.m_Cursor, upperBound);
+  }
 }
 
 static void PromptDeleteFront()
 {
-  // TODO: implement
+  if ((u32)g_Prompt.m_Cursor < g_Prompt.m_Data.m_Length)
+  {
+    g_Prompt.m_Data.Erase(g_Prompt.m_Cursor);
+  }
 }
 
 static void PromptDeleteBack()
 {
-  // TODO: implement
+  if ((u32)g_Prompt.m_Cursor <= g_Prompt.m_Start)
+  {
+    return;
+  }
+  
+  if ((u32)g_Prompt.m_Cursor < g_Prompt.m_Data.m_Length)
+  {
+    u32 prev  = g_Prompt.m_Data.m_Data[g_Prompt.m_Cursor - 1].m_Codepoint;
+    u32 cur   = g_Prompt.m_Data.m_Data[g_Prompt.m_Cursor].m_Codepoint;
+    if ((prev == '(' && cur == ')') || (prev == '[' && cur == ']') || (prev == '{' && cur == '}') || (prev == '"' && cur == '"'))
+    {
+      --g_Prompt.m_Cursor;
+      PromptErase(g_Prompt.m_Cursor, g_Prompt.m_Cursor + 2);
+      return;
+    }
+  }
+  
+  --g_Prompt.m_Cursor;
+  PromptErase(g_Prompt.m_Cursor);
 }
 
 static void PromptDeleteWord()
 {
-  // TODO: implement
+  u32 upperBound  = g_Prompt.m_Cursor;
+  while ((u32)g_Prompt.m_Cursor > g_Prompt.m_Start && !g_Prompt.m_Data.m_Data[g_Prompt.m_Cursor - 1].IsAlnum())
+  {
+    --g_Prompt.m_Cursor;
+  }
+  while ((u32)g_Prompt.m_Cursor > g_Prompt.m_Start && g_Prompt.m_Data.m_Data[g_Prompt.m_Cursor - 1].IsAlnum())
+  {
+    --g_Prompt.m_Cursor;
+  }
+  
+  if ((u32)g_Prompt.m_Cursor < upperBound)
+  {
+    PromptErase(g_Prompt.m_Cursor, upperBound);
+  }
 }
 
 static void Newline()
 {
-  // TODO: implement
+  Frame&  f         = CurrentFrame();
+  u32     lineBegin = f.m_Cursor;
+  while (lineBegin > 0 && f.m_Buffer.m_Data[lineBegin - 1].m_Codepoint != '\n')
+  {
+    --lineBegin;
+  }
+  
+  u32 nIndent = 0;
+  if (g_Options.m_TabSpaces)
+  {
+    u32 nSpaces = 0;
+    while (lineBegin + nSpaces < f.m_Buffer.m_Length && f.m_Buffer.m_Data[lineBegin + nSpaces].m_Codepoint == ' ')
+    {
+      ++nSpaces;
+    }
+    nIndent = nSpaces / g_Options.m_TabSize;
+  }
+  else
+  {
+    while (lineBegin + nIndent < f.m_Buffer.m_Length && f.m_Buffer.m_Data[lineBegin + nIndent].m_Codepoint == '\t')
+    {
+      ++nIndent;
+    }
+  }
+  
+  // unfold parentheticals
+  bool  unfolded  = false;
+  if (f.m_Cursor > 0 && f.m_Cursor < f.m_Buffer.m_Length)
+  {
+    u32 prev  = f.m_Buffer.m_Data[f.m_Cursor - 1].m_Codepoint;
+    u32 cur   = f.m_Buffer.m_Data[f.m_Cursor].m_Codepoint;
+    if (prev == '(' || prev == '[' || prev == '{')
+    {
+      f.Write('\n', f.m_Cursor);
+      ++f.m_Cursor;
+      
+      for (u32 i = 0; i < nIndent + 1; ++i)
+      {
+        f.m_Cursor = f.Tabulate(f.m_Cursor);
+      }
+      
+      f.SaveCursor();
+      
+      unfolded = true;
+    }
+    
+    if ((prev == '(' && cur == ')') || (prev == '[' && cur == ']') || (prev == '{' && cur == '}'))
+    {
+      u32 cursor  = f.m_Cursor;
+      f.Write('\n', cursor);
+      ++cursor;
+      
+      for (u32 i = 0; i < nIndent; ++i)
+      {
+        cursor = f.Tabulate(cursor);
+      }
+    }
+  }
+  
+  if (unfolded)
+  {
+    return;
+  }
+  
+  f.Write('\n', f.m_Cursor);
+  ++f.m_Cursor;
+  
+  while (nIndent)
+  {
+    f.m_Cursor = f.Tabulate(f.m_Cursor);
+    --nIndent;
+  }
+  
+  f.SaveCursor();
 }
 
 static void Undo()
@@ -446,27 +638,168 @@ static void Undo()
 
 static void NewFrame()
 {
-  // TODO: implement
+  if (g_Editor.m_NFrames >= FUNCTIONAL::MAX_FILES)
+  {
+    Error("Binds: Cannot open more than %u frames!", FUNCTIONAL::MAX_FILES);
+    return;
+  }
+  
+  EmptyFrame(g_Editor.m_Frames[g_Editor.m_NFrames++]);
+  g_Editor.m_CurFrame = g_Editor.m_NFrames - 1;
 }
 
 static void KillFrame()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  if (!(f.m_Flags & FRAME_UNSAVED))
+  {
+    DestroyFrame(g_Editor.m_CurFrame);
+    return;
+  }
+  
+  InstallConfirmPromptBinds();
+  BeginPrompt("Frame has unsaved changes, kill anyway? (y/n)");
+  g_Prompt.m_Cursor = -1;
+  while (!g_Prompt.m_Status)
+  {
+    RenderEditor();
+    RenderPrompt();
+    RenderPresent();
+    
+    ReadKey();
+  }
+  EndPrompt();
+  InstallBaseBinds();
+  
+  if (g_Prompt.m_Status == PROMPT_SUCCESS)
+  {
+    DestroyFrame(g_Editor.m_CurFrame);
+  }
 }
 
 static void Save()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  if (f.m_Source)
+  {
+    if (f.m_Flags & FRAME_UNSAVED)
+    {
+      f.Save();
+    }
+    return;
+  }
+  
+  InstallPathPromptBinds();
+  BeginPrompt("Save as: ");
+  while (!g_Prompt.m_Status)
+  {
+    RenderEditor();
+    RenderPrompt();
+    RenderPresent();
+    
+    EChar key = ReadKey();
+    if (WritableToPrompt(key))
+    {
+      PromptWrite(key, g_Prompt.m_Cursor);
+      ++g_Prompt.m_Cursor;
+    }
+  }
+  EndPrompt();
+  InstallBaseBinds();
+  
+  if (g_Prompt.m_Status == PROMPT_FAIL)
+  {
+    return;
+  }
+  
+  char* path  = PromptDataCString();
+  
+  for (usize i = 0; i < g_Editor.m_NFrames; ++i)
+  {
+    if (!g_Editor.m_Frames[i].m_Source)
+    {
+      continue;
+    }
+    
+    if (FileID(g_Editor.m_Frames[i].m_Source, true) == FileID(path, true))
+    {
+      Error("Binds: Cannot save multiple frames to a single file!");
+      free(path);
+      return;
+    }
+  }
+  
+  f.m_Source = path;
+  f.Save();
 }
 
 static void Focus()
 {
-  // TODO: implement
+  Frame tmp = CurrentFrame();
+  CurrentFrame() = g_Editor.m_Frames[0];
+  g_Editor.m_Frames[0] = tmp;
+  g_Editor.m_CurFrame = 0;
 }
 
 static void OpenFile()
 {
-  // TODO: implement
+  if (g_Editor.m_NFrames >= FUNCTIONAL::MAX_FILES)
+  {
+    Error("Binds: Cannot open more than %u frames!", FUNCTIONAL::MAX_FILES);
+    return;
+  }
+  
+  InstallPathPromptBinds();
+  BeginPrompt("Open file: ");
+  while (!g_Prompt.m_Status)
+  {
+    RenderEditor();
+    RenderPrompt();
+    RenderPresent();
+    
+    EChar key = ReadKey();
+    if (WritableToPrompt(key))
+    {
+      PromptWrite(key, g_Prompt.m_Cursor);
+      ++g_Prompt.m_Cursor;
+    }
+  }
+  EndPrompt();
+  InstallBaseBinds();
+  
+  if (g_Prompt.m_Status == PROMPT_FAIL)
+  {
+    return;
+  }
+  
+  char* path  = PromptDataCString();
+  
+  for (usize i = 0; i < g_Editor.m_NFrames; ++i)
+  {
+    if (!g_Editor.m_Frames[i].m_Source)
+    {
+      continue;
+    }
+    
+    if (FileID(g_Editor.m_Frames[i].m_Source, true) == FileID(path, true))
+    {
+      // redirect user to already opened file
+      g_Editor.m_CurFrame = i;
+      free(path);
+      return;
+    }
+  }
+  
+  if (FileFrame(g_Editor.m_Frames[g_Editor.m_NFrames], path))
+  {
+    free(path);
+    return;
+  }
+  
+  free(path);
+  
+  g_Editor.m_CurFrame = g_Editor.m_NFrames;
+  ++g_Editor.m_NFrames;
 }
 
 static void Search()
@@ -635,27 +968,208 @@ static void PromptDoubleQuote()
 
 static void Paste()
 {
-  // TODO: implement
+  if (!g_Editor.m_Clipboard.m_Data)
+  {
+    Info("Binds: Clipboard is empty");
+    return;
+  }
+  
+  Frame&  f = CurrentFrame();
+  
+  f.SaveCursor();
+  while (f.m_Cursor < f.m_Buffer.m_Length && f.m_Buffer.m_Data[f.m_Cursor].m_Codepoint != '\n')
+  {
+    ++f.m_Cursor;
+  }
+  
+  f.Write('\n', f.m_Cursor);
+  ++f.m_Cursor;
+  f.Write(g_Editor.m_Clipboard, f.m_Cursor);
+  f.LoadCursor();
 }
 
 static void CopyLine()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  
+  u32 lineBegin = f.m_Cursor;
+  while (lineBegin > 0 && f.m_Buffer.m_Data[lineBegin - 1].m_Codepoint != '\n')
+  {
+    --lineBegin;
+  }
+  
+  u32 lineEnd = f.m_Cursor;
+  while (lineEnd < f.m_Buffer.m_Length && f.m_Buffer.m_Data[lineEnd].m_Codepoint != '\n')
+  {
+    ++lineEnd;
+  }
+  
+  g_Editor.m_Clipboard.Free();
+  g_Editor.m_Clipboard = f.m_Buffer.Substring(lineBegin, lineEnd);
+  
+  Info("Binds: Copied %u characters", lineEnd - lineBegin);
 }
 
 static void CutLine()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  
+  u32 lineBegin = f.m_Cursor;
+  while (lineBegin > 0 && f.m_Buffer.m_Data[lineBegin - 1].m_Codepoint != '\n')
+  {
+    --lineBegin;
+  }
+  
+  u32 lineEnd = f.m_Cursor;
+  while (lineEnd < f.m_Buffer.m_Length && f.m_Buffer.m_Data[lineEnd].m_Codepoint != '\n')
+  {
+    ++lineEnd;
+  }
+  
+  g_Editor.m_Clipboard.Free();
+  g_Editor.m_Clipboard = f.m_Buffer.Substring(lineBegin, lineEnd);
+  
+  f.SaveCursor();
+  f.Erase(lineBegin, lineEnd + (lineEnd < f.m_Buffer.m_Length));
+  f.m_Cursor = lineBegin;
+  f.LoadCursor();
+  
+  Info("Binds: Cut %u characters", lineEnd - lineBegin);
 }
 
 static void CopyLines()
 {
-  // TODO: implement
+  InstallNumberPromptBinds();
+  BeginPrompt("Copy lines: ");
+  while (!g_Prompt.m_Status)
+  {
+    RenderEditor();
+    RenderPrompt();
+    RenderPresent();
+    
+    EChar key = ReadKey();
+    if (key.m_Codepoint < 128 && key.IsDigit())
+    {
+      PromptWrite(key, g_Prompt.m_Cursor);
+      ++g_Prompt.m_Cursor;
+    }
+  }
+  EndPrompt();
+  InstallBaseBinds();
+  
+  if (g_Prompt.m_Status == PROMPT_FAIL)
+  {
+    return;
+  }
+  
+  char* linesString = PromptDataCString();
+  u64   lines       = strtoll(linesString, nullptr, 10);
+  free(linesString);
+  
+  if (lines == 0)
+  {
+    Info("Binds: Ignoring copy of zero lines");
+    return;
+  }
+  
+  Frame&  f = CurrentFrame();
+  
+  u32 begin = f.m_Cursor;
+  while (begin > 0 && f.m_Buffer.m_Data[begin - 1].m_Codepoint != '\n')
+  {
+    --begin;
+  }
+  
+  u32 end = begin;
+  while (end < f.m_Buffer.m_Length)
+  {
+    lines -= f.m_Buffer.m_Data[end].m_Codepoint == '\n';
+    if (lines == 0)
+    {
+      break;
+    }
+    ++end;
+  }
+  
+  g_Editor.m_Clipboard.Free();
+  g_Editor.m_Clipboard = f.m_Buffer.Substring(begin, end);
+  
+  Info("Binds: Copied %u characters", end - begin);
 }
 
 static void CutLines()
 {
-  // TODO: implement
+  InstallNumberPromptBinds();
+  BeginPrompt("Cut lines: ");
+  while (!g_Prompt.m_Status)
+  {
+    RenderEditor();
+    RenderPrompt();
+    RenderPresent();
+    
+    EChar key = ReadKey();
+    if (key.m_Codepoint < 128 && key.IsDigit())
+    {
+      PromptWrite(key, g_Prompt.m_Cursor);
+      ++g_Prompt.m_Cursor;
+    }
+  }
+  EndPrompt();
+  InstallBaseBinds();
+  
+  if (g_Prompt.m_Status == PROMPT_FAIL)
+  {
+    return;
+  }
+  
+  char* linesString = PromptDataCString();
+  u64   lines       = strtoll(linesString, nullptr, 10);
+  free(linesString);
+  
+  if (lines == 0)
+  {
+    Info("Binds: Ignoring copy of zero lines");
+    return;
+  }
+  
+  Frame&  f = CurrentFrame();
+  
+  u32 begin = f.m_Cursor;
+  while (begin > 0 && f.m_Buffer.m_Data[begin - 1].m_Codepoint != '\n')
+  {
+    --begin;
+  }
+  
+  u32 end = begin;
+  while (end < f.m_Buffer.m_Length)
+  {
+    lines -= f.m_Buffer.m_Data[end].m_Codepoint == '\n';
+    if (lines == 0)
+    {
+      break;
+    }
+    ++end;
+  }
+  
+  g_Editor.m_Clipboard.Free();
+  g_Editor.m_Clipboard = f.m_Buffer.Substring(begin, end);
+  
+  f.SaveCursor();
+  f.Erase(begin, end + (end < f.m_Buffer.m_Length));
+  f.m_Cursor = begin;
+  f.LoadCursor();
+  
+  Info("Binds: Cut %u characters", end - begin);
+}
+
+static void CopyUntilLine()
+{
+  // TODO: implement CopyUntilLine() bind
+}
+
+static void CutUntilLine()
+{
+  // TODO: implement CutUntilLine() bind
 }
 
 static void Zoom()
@@ -673,7 +1187,56 @@ static void Zoom()
 
 static void Goto()
 {
-  // TODO: implement
+  InstallNumberPromptBinds();
+  BeginPrompt("Goto line: ");
+  while (!g_Prompt.m_Status)
+  {
+    RenderEditor();
+    RenderPrompt();
+    RenderPresent();
+    
+    EChar key = ReadKey();
+    if (key.m_Codepoint < 128 && key.IsDigit())
+    {
+      PromptWrite(key, g_Prompt.m_Cursor);
+      ++g_Prompt.m_Cursor;
+    }
+  }
+  EndPrompt();
+  InstallBaseBinds();
+  
+  if (g_Prompt.m_Status == PROMPT_FAIL)
+  {
+    return;
+  }
+  
+  char* lineString  = PromptDataCString();
+  u64   line        = strtoll(lineString, nullptr, 10);
+  free(lineString);
+  line -= line > 0;
+  
+  Frame&  f = CurrentFrame();
+  
+  // move cursor to needed line
+  f.m_Cursor = 0;
+  while (f.m_Cursor < f.m_Buffer.m_Length && line)
+  {
+    if (f.m_Buffer.m_Data[f.m_Cursor++].m_Codepoint == '\n')
+    {
+      --line;
+    }
+  }
+  f.SaveCursor();
+  
+  // focus selected line
+  u32 x {};
+  u32 y {};
+  u32 w {};
+  u32 h {};
+  ArrangeFrame(g_Editor.m_CurFrame, x, y, w, h);
+  
+  f.m_Start = 0;
+  f.ComputeBounds(w, h / 2);
 }
 
 static void RecordMacro()

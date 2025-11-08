@@ -115,6 +115,8 @@ struct KEYBIND
   static constexpr EChar  CUT_LINE[]                = {KEY('d'), KEY_END};
   static constexpr EChar  COPY_LINES[]              = {KEY('q'), KEY('c'), KEY_END};
   static constexpr EChar  CUT_LINES[]               = {KEY('q'), KEY('d'), KEY_END};
+  static constexpr EChar  COPY_UNTIL_LINE[]         = {KEY('o'), KEY('c'), KEY_END};
+  static constexpr EChar  CUT_UNTIL_LINE[]          = {KEY('o'), KEY('d'), KEY_END};
   static constexpr EChar  ZOOM[]                    = {KEY('z'), KEY_END};
   static constexpr EChar  GOTO[]                    = {KEY('g'), KEY_END};
   static constexpr EChar  RECORD_MACRO[]            = {KEY_FN(3), KEY_END};
@@ -281,3 +283,4 @@ constexpr NamedColor  NAMED_COLORS[]  =
 extern DynamicOptions g_Options;
 
 i32 ParseOptions();
+i32 ValidateOptions();

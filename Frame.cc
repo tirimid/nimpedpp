@@ -79,7 +79,7 @@ void  Frame::Render(u32 x, u32 y, u32 w, u32 h, bool active) const
   // render margins
   for (usize i = 0; i < g_Options.m_NMargins; ++i)
   {
-    RenderFill(' ', g_Options.m_Margin, x + leftPad + g_Options.m_Margins[i], y + 1, 1, h - 1);
+    RenderFill(VISUAL::MARGIN_CHAR, g_Options.m_Margin, x + leftPad + g_Options.m_Margins[i], y + 1, 1, h - 1);
   }
   
   // render frame contents and find cursor position
@@ -318,6 +318,11 @@ void  Frame::Erase(u32 lb, u32 ub)
   // modify buffer
   m_Buffer.Erase(lb, ub);
   m_Flags |= FRAME_UNSAVED;
+}
+
+void  Frame::Erase(u32 pos)
+{
+  Erase(pos, pos + 1);
 }
 
 void  Frame::Undo()
@@ -590,7 +595,7 @@ i32 FileFrame(OUT Frame& frame, const char* path)
       return (1);
     }
     
-    buffer.Append(ch);
+    buffer.Insert(ch, buffer.m_Length);
   }
   
   fclose(file);
@@ -598,7 +603,7 @@ i32 FileFrame(OUT Frame& frame, const char* path)
   frame = (Frame)
   {
     .m_Buffer           = buffer,
-    .m_Source           = nullptr,
+    .m_Source           = strdup(path),
     .m_Start            = 0,
     .m_Cursor           = 0,
     .m_SavedCursorX     = 0,

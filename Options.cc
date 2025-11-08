@@ -126,6 +126,17 @@ i32 ParseOptions()
   return (0);
 }
 
+i32 ValidateOptions()
+{
+  if (g_Options.m_TabSpaces < 1)
+  {
+    Error("Options: Invalid value for TabSpaces: %lld!", g_Options.m_TabSpaces);
+    return (1);
+  }
+  
+  return (0);
+}
+
 static FILE*  OpenConfig(const char* configPath)
 {
   char  path[PATH_MAX]  {};

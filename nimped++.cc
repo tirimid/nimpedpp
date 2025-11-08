@@ -17,6 +17,11 @@ int main(int argc, char* argv[])
     return (1);
   }
   
+  if (ValidateOptions())
+  {
+    return (1);
+  }
+  
   if (InitRender())
   {
     return (1);

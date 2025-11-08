@@ -56,6 +56,7 @@ struct Frame
   void  Write(const EString& str, u32 pos);
   void  Write(const char* str, u32 pos);
   void  Erase(u32 lb, u32 ub);
+  void  Erase(u32 pos);
   void  Undo();
   void  BreakHistory();
   void  SaveCursor();

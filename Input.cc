@@ -94,7 +94,7 @@ EChar ReadRawKey()
   
   if (g_MacroMode == RECORDING_MACRO)
   {
-    g_Macro.Append(ch);
+    g_Macro.Insert(ch, g_Macro.m_Length);
   }
   
   return (ch);

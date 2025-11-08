@@ -29,8 +29,9 @@ using usize = size_t;
 using f32   = float;
 using f64   = double;
 
-void  Info(const char* fmt, ...);
-void  Error(const char* fmt, ...);
-u64   FileID(const char* path, bool dereference);
-i32   RecursiveCreateDir(const char* path);
-i32   CreateFile(const char* path);
+void        Info(const char* fmt, ...);
+void        Error(const char* fmt, ...);
+u64         FileID(const char* path, bool dereference);
+i32         RecursiveCreateDir(const char* path);
+i32         CreateFile(const char* path);
+const char* FileExtension(const char *path);

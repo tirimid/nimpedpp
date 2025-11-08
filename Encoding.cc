@@ -163,21 +163,11 @@ void  EString::IncreaseAllocation()
   m_Data = (EChar*)reallocarray(m_Data, m_Capacity, sizeof(EChar));
 }
 
-void  EString::Append(EChar ch)
-{
-  if (m_Length >= m_Capacity)
-  {
-    IncreaseAllocation();
-  }
-  m_Data[m_Length++] = ch;
-}
-
 void  EString::Insert(EChar ch, u32 pos)
 {
   if (m_Length >= m_Capacity)
   {
-    m_Capacity *= 2;
-    m_Data = (EChar*)reallocarray(m_Data, m_Capacity, sizeof(EChar));
+    IncreaseAllocation();
   }
   
   memmove(&m_Data[pos + 1], &m_Data[pos], sizeof(EChar) * (m_Length - pos));
@@ -187,19 +177,12 @@ void  EString::Insert(EChar ch, u32 pos)
 
 void  EString::Insert(const EString& str, u32 pos)
 {
-  u32 newCapacity = m_Capacity;
   for (usize i = 1; i <= str.m_Length; ++i)
   {
-    if (m_Length + i > newCapacity)
+    if (m_Length + i > m_Capacity)
     {
-      newCapacity *= 2;
+      IncreaseAllocation();
     }
-  }
-  
-  if (newCapacity != m_Capacity)
-  {
-    m_Capacity = newCapacity;
-    m_Data = (EChar*)reallocarray(m_Data, m_Capacity, sizeof(EChar));
   }
   
   memmove(&m_Data[pos + str.m_Length], &m_Data[pos], sizeof(EChar) * (m_Length - pos));
@@ -209,19 +192,12 @@ void  EString::Insert(const EString& str, u32 pos)
 
 void  EString::Insert(const EChar* str, u32 length, u32 pos)
 {
-  u32 newCapacity = m_Capacity;
   for (usize i = 1; i <= length; ++i)
   {
-    if (m_Length + i > newCapacity)
+    if (m_Length + i > m_Capacity)
     {
-      newCapacity *= 2;
+      IncreaseAllocation();
     }
-  }
-  
-  if (newCapacity != m_Capacity)
-  {
-    m_Capacity = newCapacity;
-    m_Data = (EChar*)reallocarray(m_Data, m_Capacity, sizeof(EChar));
   }
   
   memmove(&m_Data[pos + length], &m_Data[pos], sizeof(EChar) * (m_Length - pos));
@@ -231,20 +207,13 @@ void  EString::Insert(const EChar* str, u32 length, u32 pos)
 
 void  EString::Insert(const char* str, u32 pos)
 {
-  u32 length      = strlen(str);
-  u32 newCapacity = m_Capacity;
+  u32 length  = strlen(str);
   for (usize i = 1; i <= length; ++i)
   {
-    if (m_Length + i > newCapacity)
+    if (m_Length + i > m_Capacity)
     {
-      newCapacity *= 2;
+      IncreaseAllocation();
     }
-  }
-  
-  if (newCapacity != m_Capacity)
-  {
-    m_Capacity = newCapacity;
-    m_Data = (EChar*)reallocarray(m_Data, m_Capacity, sizeof(EChar));
   }
   
   memmove(&m_Data[pos + length], &m_Data[pos], sizeof(EChar) * (m_Length - pos));
@@ -259,6 +228,22 @@ void  EString::Erase(u32 lb, u32 ub)
 {
   memmove(&m_Data[lb], &m_Data[ub], sizeof(EChar) * (m_Length - ub));
   m_Length -= ub - lb;
+}
+
+void  EString::Erase(u32 pos)
+{
+  Erase(pos, pos + 1);
+}
+
+EString EString::Substring(u32 lb, u32 ub) const
+{
+  EString newString {};
+  newString.m_Data      = (EChar*)calloc(ub - lb, sizeof(EChar));
+  newString.m_Length    = ub - lb;
+  newString.m_Capacity  = ub - lb;
+  memcpy(newString.m_Data, &m_Data[lb], sizeof(EChar) * (ub - lb));
+  
+  return (newString);
 }
 
 EString::EString()
