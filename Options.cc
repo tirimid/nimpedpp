@@ -327,25 +327,33 @@ static i32  GetColor(const char* path, FILE* file, const char* key, OUT u8& valu
   }
   
   // check for named colors
-  for (usize i = 0; i < ARRAY_SIZE(NAMED_COLORS); ++i)
+  if (!isdigit(buffer[0]))
   {
-    if (!strcmp(buffer, NAMED_COLORS[i].m_Name))
+    for (usize i = 0; i < ARRAY_SIZE(NAMED_COLORS); ++i)
     {
-      value = NAMED_COLORS[i].m_Color;
-      return (0);
+      if (!strcmp(buffer, NAMED_COLORS[i].m_Name))
+      {
+        value = NAMED_COLORS[i].m_Color;
+        return (0);
+      }
     }
-  }
-  
-  errno = 0;
-  unsigned long long  ull = strtoull(buffer, nullptr, 0);
-  if (errno || ull > UINT8_MAX)
-  {
+    
     Error("Options: Invalid color value for %s in %s!", key, path);
     return (1);
   }
-  
-  value = ull;
-  return (0);
+  else
+  {
+    errno = 0;
+    unsigned long long  ull = strtoull(buffer, nullptr, 0);
+    if (errno || ull > UINT8_MAX)
+    {
+      Error("Options: Invalid color value for %s in %s!", key, path);
+      return (1);
+    }
+    
+    value = ull;
+    return (0);
+  }
 }
 
 static i32  GetColorPair(const char* path, FILE* file, const char* key, OUT Color& value)
@@ -370,20 +378,34 @@ static i32  GetColorPair(const char* path, FILE* file, const char* key, OUT Colo
   u16           bg            = INVALID_COLOR;
   
   // check for named colors
-  for (usize i = 0; i < ARRAY_SIZE(NAMED_COLORS); ++i)
+  if (!isdigit(fgBuffer[0]))
   {
-    if (!strcmp(fgBuffer, NAMED_COLORS[i].m_Name))
+    for (usize i = 0; i < ARRAY_SIZE(NAMED_COLORS); ++i)
     {
-      fg = NAMED_COLORS[i].m_Color;
+      if (!strcmp(fgBuffer, NAMED_COLORS[i].m_Name))
+      {
+        fg = NAMED_COLORS[i].m_Color;
+      }
+      
+      if (!strcmp(bgBuffer, NAMED_COLORS[i].m_Name))
+      {
+        bg = NAMED_COLORS[i].m_Color;
+      }
     }
     
-    if (!strcmp(bgBuffer, NAMED_COLORS[i].m_Name))
+    if (fg == INVALID_COLOR)
     {
-      bg = NAMED_COLORS[i].m_Color;
+      Error("Options: Invalid FG color name for %s in %s!", key, path);
+      return (1);
+    }
+    
+    if (bg == INVALID_COLOR)
+    {
+      Error("Options: Invalid BG color name for %s in %s!", key, path);
+      return (1);
     }
   }
-  
-  if (fg == INVALID_COLOR)
+  else
   {
     errno = 0;
     unsigned long long  ull = strtoull(fgBuffer, nullptr, 0);
@@ -393,12 +415,9 @@ static i32  GetColorPair(const char* path, FILE* file, const char* key, OUT Colo
       return (1);
     }
     fg = ull;
-  }
-  
-  if (bg == INVALID_COLOR)
-  {
+    
     errno = 0;
-    unsigned long long  ull = strtoull(bgBuffer, nullptr, 0);
+    ull = strtoull(bgBuffer, nullptr, 0);
     if (errno || ull > UINT8_MAX)
     {
       Error("Options: Invalid BG color value for %s in %s!", key, path);

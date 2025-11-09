@@ -143,8 +143,10 @@ i32 CreateFile(const char* path)
       return (1);
     }
   }
-  
-  free(dir);
+  else
+  {
+    free(dir);
+  }
   
   FILE* file  = fopen(path, "wb");
   if (!file)

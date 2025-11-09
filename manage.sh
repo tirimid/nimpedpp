@@ -38,7 +38,7 @@ then
   fi
   
   echo "Info: Copying executable" >&2
-  cp bin/Release/nimped++ $BIN_INSTALL_DIR 2> /dev/null
+  cp bin/Release/nimped++ $BIN_INSTALL_DIR/nimped++ 2> /dev/null
   if [ $? -ne 0 ]
   then
     echo "Err: Failed to copy executable to system!" >&2

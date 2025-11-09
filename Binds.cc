@@ -1244,7 +1244,7 @@ static void RecordMacro()
   if (!IsRecordingMacro())
   {
     Info("Binds: Recording macro");
-    RecordMacro();
+    ::RecordMacro();
   }
 }
 
@@ -1258,7 +1258,7 @@ static void ExecuteMacro()
   else
   {
     Info("Binds: Executing macro");
-    ExecuteMacro();
+    ::ExecuteMacro();
   }
 }
 

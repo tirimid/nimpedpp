@@ -60,8 +60,9 @@ struct FRAME
     "  Press C-h to bring up help information\n"
     "\n"
     "nimped++ is Free Software licensed under the GNU GPLv3.\n";
-
-  static constexpr const char*  HELP_TEXT     = "nimped++ help text\n";
+  
+  // TODO: write up help text
+  static constexpr const char*  HELP_TEXT     = "nimped++ help text (placeholder)\n";
 };
 
 struct VISUAL
