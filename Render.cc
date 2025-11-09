@@ -12,32 +12,16 @@ extern "C"
 #include <termios.h>
 }
 
-static void ApplyAttributes(u8 fg, u8 bg);
+static void ApplyColor(Color color);
 static void SIGWINCHHandler(int arg);
 
 static EChar*         g_CellChars;
-static Attributes*    g_CellAttributes;
+static Color*         g_CellColors;
 static u32            g_Width;
 static u32            g_Height;
 static struct termios g_OldTermIOS;
 static EString        g_Bar;
 static u32            g_BarHeight;
-
-Attributes::Attributes()
-{
-}
-
-Attributes::Attributes(u8 fg, u8 bg)
-  : m_FG(fg),
-  m_BG(bg)
-{
-}
-
-Attributes::Attributes(Color color)
-  : m_FG(color.m_FG),
-  m_BG(color.m_BG)
-{
-}
 
 i32 InitRender()
 {
@@ -67,7 +51,7 @@ i32 InitRender()
   g_Height = winSize.ws_row;
   
   g_CellChars = (EChar*)calloc(g_Width * g_Height, sizeof(EChar));
-  g_CellAttributes = (Attributes*)calloc(g_Width * g_Height, sizeof(Attributes));
+  g_CellColors = (Color*)calloc(g_Width * g_Height, sizeof(Color));
   
   struct sigaction  sigAction {};
   sigaction(SIGWINCH, nullptr, &sigAction);
@@ -111,7 +95,7 @@ void  RenderFill(EChar ch, u32 x, u32 y, u32 w, u32 h)
   }
 }
 
-void  RenderFill(Attributes a, u32 x, u32 y, u32 w, u32 h)
+void  RenderFill(Color color, u32 x, u32 y, u32 w, u32 h)
 {
   if (x >= g_Width || y >= g_Height)
   {
@@ -125,12 +109,12 @@ void  RenderFill(Attributes a, u32 x, u32 y, u32 w, u32 h)
   {
     for (u32 cy = y; cy < y + h; ++cy)
     {
-      g_CellAttributes[g_Width * cy + cx] = a;
+      g_CellColors[g_Width * cy + cx] = color;
     }
   }
 }
 
-void  RenderFill(EChar ch, Attributes a, u32 x, u32 y, u32 w, u32 h)
+void  RenderFill(EChar ch, Color color, u32 x, u32 y, u32 w, u32 h)
 {
   if (x >= g_Width || y >= g_Height)
   {
@@ -145,7 +129,7 @@ void  RenderFill(EChar ch, Attributes a, u32 x, u32 y, u32 w, u32 h)
     for (u32 cy = y; cy < y + h; ++cy)
     {
       g_CellChars[g_Width * cy + cx] = ch;
-      g_CellAttributes[g_Width * cy + cx] = a;
+      g_CellColors[g_Width * cy + cx] = color;
     }
   }
 }
@@ -160,17 +144,17 @@ void  RenderPut(EChar ch, u32 x, u32 y)
   g_CellChars[g_Width * y + x] = ch;
 }
 
-void  RenderPut(Attributes a, u32 x, u32 y)
+void  RenderPut(Color color, u32 x, u32 y)
 {
   if (x >= g_Width || y >= g_Height)
   {
     return;
   }
   
-  g_CellAttributes[g_Width * y + x] = a;
+  g_CellColors[g_Width * y + x] = color;
 }
 
-void  RenderPut(EChar ch, Attributes a, u32 x, u32 y)
+void  RenderPut(EChar ch, Color color, u32 x, u32 y)
 {
   if (x >= g_Width || y >= g_Height)
   {
@@ -178,7 +162,7 @@ void  RenderPut(EChar ch, Attributes a, u32 x, u32 y)
   }
   
   g_CellChars[g_Width * y + x] = ch;
-  g_CellAttributes[g_Width * y + x] = a;
+  g_CellColors[g_Width * y + x] = color;
 }
 
 void  RenderGet(OUT EChar& ch, u32 x, u32 y)
@@ -186,15 +170,15 @@ void  RenderGet(OUT EChar& ch, u32 x, u32 y)
   ch = g_CellChars[g_Width * y + x];
 }
 
-void  RenderGet(OUT Attributes& a, u32 x, u32 y)
+void  RenderGet(OUT Color& color, u32 x, u32 y)
 {
-  a = g_CellAttributes[g_Width * y + x];
+  color = g_CellColors[g_Width * y + x];
 }
 
-void  RenderGet(OUT EChar& ch, OUT Attributes& a, u32 x, u32 y)
+void  RenderGet(OUT EChar& ch, OUT Color& color, u32 x, u32 y)
 {
   ch = g_CellChars[g_Width * y + x];
-  a = g_CellAttributes[g_Width * y + x];
+  color = g_CellColors[g_Width * y + x];
 }
 
 void  RenderPresent()
@@ -205,12 +189,12 @@ void  RenderPresent()
   fputs("\x1b[H\x1b[0m", stdout);
   
   // draw out the bar
-  ApplyAttributes(g_Options.m_Global.m_FG, g_Options.m_Global.m_BG);
+  ApplyColor(g_Options.m_Global);
   for (usize i = 0; i < g_Width * barHeight; ++i)
   {
     if ((i64)i == g_Prompt.m_Cursor)
     {
-      ApplyAttributes(g_Options.m_GlobalCursor.m_FG, g_Options.m_GlobalCursor.m_BG);
+      ApplyColor(g_Options.m_GlobalCursor);
     }
     
     if (i < g_Bar.m_Length)
@@ -224,18 +208,19 @@ void  RenderPresent()
     
     if ((i64)i == g_Prompt.m_Cursor)
     {
-      ApplyAttributes(g_Options.m_Global.m_FG, g_Options.m_Global.m_BG);
+      ApplyColor(g_Options.m_Global);
     }
   }
   
   // draw out the rendered frame
-  Attributes  a {};
+  Color color {};
+  ApplyColor(color);
   for (usize i = 0; i < g_Width * (g_Height - barHeight); ++i)
   {
-    if (g_CellAttributes[i].m_FG != a.m_FG || g_CellAttributes[i].m_BG != a.m_BG)
+    if (g_CellColors[i].m_FG != color.m_FG || g_CellColors[i].m_BG != color.m_BG)
     {
-      a = g_CellAttributes[i];
-      ApplyAttributes(a.m_FG, a.m_BG);
+      color = g_CellColors[i];
+      ApplyColor(color);
     }
     
     PrintEChar(g_CellChars[i]);
@@ -264,15 +249,15 @@ void  RenderBar(const char* str)
   g_BarHeight += !g_BarHeight;
 }
 
-static void ApplyAttributes(u8 fg, u8 bg)
+static void ApplyColor(Color color)
 {
-  u8  fg0 = fg % 10;
-  u8  fg1 = fg / 10 % 10;
-  u8  fg2 = fg / 100;
+  u8  fg0 = color.m_FG % 10;
+  u8  fg1 = color.m_FG / 10 % 10;
+  u8  fg2 = color.m_FG / 100;
   
-  u8  bg0 = bg % 10;
-  u8  bg1 = bg / 10 % 10;
-  u8  bg2 = bg / 100;
+  u8  bg0 = color.m_BG % 10;
+  u8  bg1 = color.m_BG / 10 % 10;
+  u8  bg2 = color.m_BG / 100;
   
   char  buffer[]  = "\x1b[38;5;000m\x1b[48;5;000m\0";
   buffer[7]   += fg2;
@@ -296,7 +281,7 @@ static void SIGWINCHHandler(int arg)
   g_Height = winSize.ws_row;
   
   g_CellChars = (EChar*)reallocarray(g_CellChars, g_Width * g_Height, sizeof(EChar));
-  g_CellAttributes = (Attributes*)reallocarray(g_CellAttributes, g_Width * g_Height, sizeof(Attributes));
+  g_CellColors = (Color*)reallocarray(g_CellColors, g_Width * g_Height, sizeof(Color));
   
   RenderBar(g_Bar.Copy()); // recompute bar
 }

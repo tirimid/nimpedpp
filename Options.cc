@@ -454,7 +454,7 @@ static void ReadLangConfig(FILE* file, const char* keywordKey, const char* primi
     
     ++*nKeywords;
     *keywords = (EString*)reallocarray(*keywords, *nKeywords, sizeof(EString));
-    (*keywords)[*nKeywords - 1] = EString{value};
+    (*keywords)[*nKeywords - 1] = value;
   }
   
   for (i32 i = 0; GetRaw(FUNCTIONAL::LANG_CONF, file, primitiveKey, value, i); ++i)
@@ -464,5 +464,6 @@ static void ReadLangConfig(FILE* file, const char* keywordKey, const char* primi
     
     ++*nPrimitives;
     *primitives = (EString*)reallocarray(*primitives, *nPrimitives, sizeof(EString));
+    (*primitives)[*nPrimitives - 1] = value;
   }
 }

@@ -29,8 +29,8 @@ void  Frame::Free()
 void  Frame::Render(u32 x, u32 y, u32 w, u32 h, bool active) const
 {
   // render window top bar
-  Attributes  attrTop {active ? g_Options.m_CurrentWindow : g_Options.m_Window};
-  RenderFill(' ', attrTop, x, y, w, 1);
+  Color topColor  = active ? g_Options.m_CurrentWindow : g_Options.m_Window;
+  RenderFill(' ', topColor, x, y, w, 1);
   
   EString name  {m_Source ? m_Source : VISUAL::SCRATCH_NAME};
   
@@ -147,13 +147,13 @@ void  Frame::Render(u32 x, u32 y, u32 w, u32 h, bool active) const
       cw = 1;
       if (i >= highlight.m_LowerBound && i < highlight.m_UpperBound)
       {
-        RenderPut(Attributes{highlight.m_FG, highlight.m_BG}, x + leftPad + cx, y + cy + 1);
+        RenderPut(highlight.m_Color, x + leftPad + cx, y + cy + 1);
       }
       else
       {
         RenderPut(g_Options.m_Normal, x + leftPad + cx, y + cy + 1);
       }
-      RenderPut(m_Buffer.m_Data[i].IsPrint() ? m_Buffer.m_Data[i] : EChar{REPLACEMENT_CHAR}, x + leftPad + cx, y + cy + 1);
+      RenderPut(m_Buffer.m_Data[i].IsPrint() ? m_Buffer.m_Data[i] : REPLACEMENT_CHAR, x + leftPad + cx, y + cy + 1);
       break;
     }
     
@@ -167,10 +167,10 @@ void  Frame::Render(u32 x, u32 y, u32 w, u32 h, bool active) const
   RenderFill(g_Options.m_LineNumberHighlight, x, y + cursorY + 1, leftPad, 1);
   for (u32 i = 0; leftPad + i < w; ++i)
   {
-    Attributes  a {};
-    RenderGet(a, x + leftPad + i, y + cursorY + 1);
-    a.m_BG = a.m_BG == g_Options.m_Normal.m_BG ? g_Options.m_CursorHighlightBG : a.m_BG;
-    RenderPut(a, x + leftPad + i, y + cursorY + 1);
+    Color color {};
+    RenderGet(color, x + leftPad + i, y + cursorY + 1);
+    color.m_BG = color.m_BG == g_Options.m_Normal.m_BG ? g_Options.m_CursorHighlightBG : color.m_BG;
+    RenderPut(color, x + leftPad + i, y + cursorY + 1);
   }
   RenderPut(g_Options.m_Cursor, x + leftPad + cursorX, y + cursorY + 1);
 }

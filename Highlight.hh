@@ -3,14 +3,14 @@
 #pragma once
 
 #include <Frame.hh>
+#include <Options.hh>
 #include <Util.hh>
 
 struct Region
 {
-  u32 m_LowerBound;
-  u32 m_UpperBound;
-  u8  m_FG;
-  u8  m_BG;
+  u32   m_LowerBound;
+  u32   m_UpperBound;
+  Color m_Color;
 };
 
 Region  FindHighlight(const Frame& frame, u32 from);

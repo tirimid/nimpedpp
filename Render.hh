@@ -6,27 +6,17 @@
 #include <Options.hh>
 #include <Util.hh>
 
-struct Attributes
-{
-  u8  m_FG  {};
-  u8  m_BG  {};
-  
-  Attributes();
-  Attributes(u8 fg, u8 bg);
-  Attributes(Color color);
-};
-
 i32   InitRender();
 void  QuitRender(bool clearScreen);
 void  RenderFill(EChar ch, u32 x, u32 y, u32 w, u32 h);
-void  RenderFill(Attributes a, u32 x, u32 y, u32 w, u32 h);
-void  RenderFill(EChar ch, Attributes a, u32 x, u32 y, u32 w, u32 h);
+void  RenderFill(Color color, u32 x, u32 y, u32 w, u32 h);
+void  RenderFill(EChar ch, Color color, u32 x, u32 y, u32 w, u32 h);
 void  RenderPut(EChar ch, u32 x, u32 y);
-void  RenderPut(Attributes a, u32 x, u32 y);
-void  RenderPut(EChar ch, Attributes a, u32 x, u32 y);
+void  RenderPut(Color color, u32 x, u32 y);
+void  RenderPut(EChar ch, Color color, u32 x, u32 y);
 void  RenderGet(OUT EChar& ch, u32 x, u32 y);
-void  RenderGet(OUT Attributes& a, u32 x, u32 y);
-void  RenderGet(OUT EChar& ch, OUT Attributes& a, u32 x, u32 y);
+void  RenderGet(OUT Color& color, u32 x, u32 y);
+void  RenderGet(OUT EChar& ch, OUT Color& color, u32 x, u32 y);
 void  RenderPresent();
 void  WindowSize(OUT u32& width, OUT u32& height);
 void  RenderBar(OWNS EString str);
