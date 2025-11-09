@@ -162,3 +162,24 @@ const char* FileExtension(const char *path)
   s = s ? s + 1 : "";
   return (s);
 }
+
+void  AppendCString(char* dst, usize dstSize, const char* src)
+{
+  usize end = 0;
+  while (end < dstSize && dst[end])
+  {
+    ++end;
+  }
+  
+  if (end == dstSize)
+  {
+    return;
+  }
+  
+  while (end < dstSize && *src)
+  {
+    dst[end] = *src;
+    ++end;
+    ++src;
+  }
+}

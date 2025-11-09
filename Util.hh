@@ -35,3 +35,4 @@ u64         FileID(const char* path, bool dereference);
 i32         RecursiveCreateDir(const char* path);
 i32         CreateFile(const char* path);
 const char* FileExtension(const char *path);
+void        AppendCString(char* dst, usize dstSize, const char* src);

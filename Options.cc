@@ -143,21 +143,15 @@ static FILE*  OpenConfig(const char* configPath)
   
   if (g_Args.m_ConfigDir)
   {
-    usize length  = snprintf(path, PATH_MAX, "%s", g_Args.m_ConfigDir);
+    strncpy(path, g_Args.m_ConfigDir, sizeof(path) - 1);
     
-    char  fixed[PATH_MAX] {};
+    usize length  = strlen(path);
     if (length && path[length - 1] != '/')
     {
-      // compiler really needs to shut up about this crap
-      i32 nbytes  = snprintf(fixed, sizeof(fixed), "%s/", path);
-      (void)nbytes;
-    }
-    else
-    {
-      snprintf(fixed, sizeof(fixed), "%s", path);
+      AppendCString(path, sizeof(path), "/");
     }
     
-    snprintf(path, sizeof(path), "%s%s", fixed, configPath);
+    AppendCString(path, sizeof(path), configPath);
   }
   else
   {
