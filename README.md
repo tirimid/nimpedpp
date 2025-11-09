@@ -1,5 +1,7 @@
 # nimpedpp
 
+![](assets/nimped++.png)
+
 ## Introduction
 
 nimped++ is the C++ rewrite (with some featural changes / additions) of
