@@ -185,3 +185,15 @@ void  AppendCString(char* dst, usize dstSize, const char* src)
     ++src;
   }
 }
+
+void  TruncateCString(char* str, usize maxLength)
+{
+  for (usize i = 0; i < maxLength; ++i)
+  {
+    if (!str[i])
+    {
+      return;
+    }
+  }
+  str[maxLength] = 0;
+}

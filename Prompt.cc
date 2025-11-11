@@ -75,13 +75,14 @@ void  CompletePromptPath()
   
   char* promptData          = PromptDataCString();
   char  path[PATH_MAX + 1]  {};
-  strncpy(path, promptData, sizeof(path));
+  TruncateCString(promptData, PATH_MAX);
+  strcpy(path, promptData);
   free(promptData);
   
   char  name[PATH_MAX + 1]  {};
   char  dir[PATH_MAX + 1]   {};
   
-  strncpy(dir, path, sizeof(dir));
+  strcpy(dir, path);
   char* firstSlash  = strchr(dir, '/');
   char* lastSlash   = strrchr(dir, '/');
   
@@ -95,16 +96,16 @@ void  CompletePromptPath()
   {
     dir[0] = '.';
     dir[1] = 0;
-    strncpy(name, path, sizeof(name));
+    strcpy(name, path);
   }
   else if (firstChar && firstChar == firstSlash && firstSlash == lastSlash)
   {
-    strncpy(name, &lastSlash[1], sizeof(name));
+    strcpy(name, &lastSlash[1]);
     lastSlash[1] = 0;
   }
   else
   {
-    strncpy(name, &lastSlash[1], sizeof(name));
+    strcpy(name, &lastSlash[1]);
     lastSlash[0] = 0;
   }
   
