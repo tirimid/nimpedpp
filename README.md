@@ -1,6 +1,8 @@
 # nimpedpp
 
-![](assets/nimped++.png)
+![](assets/nimped++-dark.png)
+
+![](assets/nimped++-light.png)
 
 ## Introduction
 
