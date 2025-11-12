@@ -17,24 +17,12 @@ enum HistoryType : u8
   HISTORY_BREAK
 };
 
-union History
+struct History
 {
-  struct
-  {
-    HistoryType m_Type;
-    u32         m_LowerBound;
-    u32         m_UpperBound;
-  }             m_Write;
-  
-  struct
-  {
-    HistoryType m_Type;
-    u32         m_LowerBound;
-    u32         m_UpperBound;
-    EChar*      m_Data;
-  }             m_Erase;
-  
-  HistoryType   m_Type;
+  EChar*      m_Data;
+  u32         m_LowerBound;
+  u32         m_UpperBound;
+  HistoryType m_Type;
 };
 
 struct Frame
@@ -48,6 +36,7 @@ struct Frame
   History*  m_History;
   u32       m_HistoryLength;
   u32       m_HistoryCapacity;
+  u32       m_CurHistory; // 1-based
   
   void  Free();
   void  Render(u32 x, u32 y, u32 w, u32 h, bool active) const;
@@ -58,7 +47,9 @@ struct Frame
   void  Erase(u32 lb, u32 ub);
   void  Erase(u32 pos);
   void  Undo();
+  void  Redo();
   void  BreakHistory();
+  void  TruncateHistory();
   void  SaveCursor();
   void  LoadCursor();
   void  ComputeBounds(u32 w, u32 h);

@@ -18,9 +18,9 @@ void  Frame::Free()
   
   for (u32 i = 0; i < m_HistoryLength; ++i)
   {
-    if (m_History[i].m_Type == HISTORY_ERASE)
+    if (m_History[i].m_Data)
     {
-      free(m_History[i].m_Erase.m_Data);
+      free(m_History[i].m_Data);
     }
   }
   free(m_History);
@@ -221,10 +221,14 @@ void  Frame::Write(const EString& str, u32 pos)
   m_Flags |= FRAME_UNSAVED;
   
   // push history entry
+  TruncateHistory();
   History*  history = m_HistoryLength ? &m_History[m_HistoryLength - 1] : nullptr;
-  if (history && history->m_Type == HISTORY_WRITE && history->m_Write.m_UpperBound == pos)
+  if (history && history->m_Type == HISTORY_WRITE && history->m_UpperBound == pos)
   {
-    history->m_Write.m_UpperBound = pos + str.m_Length;
+    u32 newUpperBound = pos + str.m_Length;
+    history->m_Data = (EChar*)reallocarray(history->m_Data, newUpperBound - history->m_LowerBound, sizeof(EChar));
+    memcpy(&history->m_Data[history->m_UpperBound - history->m_LowerBound], str.m_Data, sizeof(EChar) * str.m_Length);
+    history->m_UpperBound = newUpperBound;
   }
   else
   {
@@ -234,64 +238,35 @@ void  Frame::Write(const EString& str, u32 pos)
       m_History = (History*)reallocarray(m_History, m_HistoryCapacity, sizeof(History));
     }
     
-    m_History[m_HistoryLength++] = (History)
+    m_History[m_HistoryLength] = (History)
     {
-      .m_Write =
-      {
-        .m_Type       = HISTORY_WRITE,
-        .m_LowerBound = pos,
-        .m_UpperBound = pos + str.m_Length
-      }
+      .m_Data       = str.CopyData(),
+      .m_LowerBound = pos,
+      .m_UpperBound = pos + str.m_Length,
+      .m_Type       = HISTORY_WRITE
     };
+    ++m_HistoryLength;
+    ++m_CurHistory;
   }
 }
 
 void  Frame::Write(const char* str, u32 pos)
 {
-  // modify buffer
-  m_Buffer.Insert(str, pos);
-  m_Flags |= FRAME_UNSAVED;
-  
-  // push history entry
-  History*  history = m_HistoryLength ? &m_History[m_HistoryLength - 1] : nullptr;
-  if (history && history->m_Type == HISTORY_WRITE && history->m_Write.m_UpperBound == pos)
-  {
-    history->m_Write.m_UpperBound = pos + strlen(str);
-  }
-  else
-  {
-    if (m_HistoryLength >= m_HistoryCapacity)
-    {
-      m_HistoryCapacity *= 2;
-      m_History = (History*)reallocarray(m_History, m_HistoryCapacity, sizeof(History));
-    }
-    
-    m_History[m_HistoryLength++] = (History)
-    {
-      .m_Write =
-      {
-        .m_Type       = HISTORY_WRITE,
-        .m_LowerBound = pos,
-        .m_UpperBound = pos + (u32)strlen(str)
-      }
-    };
-  }
+  EString eString {str};
+  Write(eString, pos);
+  eString.Free();
 }
 
 void  Frame::Erase(u32 lb, u32 ub)
 {
   // push history entry
   History*  history = m_HistoryLength ? &m_History[m_HistoryLength - 1] : nullptr;
-  if (history && history->m_Type == HISTORY_ERASE && history->m_Erase.m_LowerBound == ub)
+  if (history && history->m_Type == HISTORY_ERASE && history->m_LowerBound == ub)
   {
-    history->m_Erase.m_Data = (EChar*)reallocarray(history->m_Erase.m_Data, history->m_Erase.m_UpperBound - lb, sizeof(EChar));
-    memmove(
-      &history->m_Erase.m_Data[ub - lb],
-      history->m_Erase.m_Data,
-      sizeof(EChar) * (history->m_Erase.m_UpperBound - history->m_Erase.m_LowerBound)
-    );
-    memcpy(history->m_Erase.m_Data, &m_Buffer.m_Data[lb], sizeof(EChar) * (ub - lb));
-    history->m_Erase.m_LowerBound = lb;
+    history->m_Data = (EChar*)reallocarray(history->m_Data, history->m_UpperBound - lb, sizeof(EChar));
+    memmove(&history->m_Data[ub - lb], history->m_Data, sizeof(EChar) * (history->m_UpperBound - history->m_LowerBound));
+    memcpy(history->m_Data, &m_Buffer.m_Data[lb], sizeof(EChar) * (ub - lb));
+    history->m_LowerBound = lb;
   }
   else
   {
@@ -303,16 +278,15 @@ void  Frame::Erase(u32 lb, u32 ub)
     
     EChar*  data  = (EChar*)calloc(ub - lb, sizeof(EChar));
     memcpy(data, &m_Buffer.m_Data[lb], sizeof(EChar) * (ub - lb));
-    m_History[m_HistoryLength++] = (History)
+    m_History[m_HistoryLength] = (History)
     {
-      .m_Erase =
-      {
-        .m_Type       = HISTORY_ERASE,
-        .m_LowerBound = lb,
-        .m_UpperBound = ub,
-        .m_Data       = data
-      }
+      .m_Data       = data,
+      .m_LowerBound = lb,
+      .m_UpperBound = ub,
+      .m_Type       = HISTORY_ERASE
     };
+    ++m_HistoryLength;
+    ++m_CurHistory;
   }
   
   // modify buffer
@@ -327,39 +301,71 @@ void  Frame::Erase(u32 pos)
 
 void  Frame::Undo()
 {
-  while (m_HistoryLength && m_History[m_HistoryLength - 1].m_Type == HISTORY_BREAK)
-  {
-    --m_HistoryLength;
-  }
-  
-  if (!m_HistoryLength)
+  if (m_HistoryLength == 0)
   {
     return;
   }
   
-  const History*  history = &m_History[m_HistoryLength - 1];
+  while (m_CurHistory > 0 && m_History[m_CurHistory - 1].m_Type == HISTORY_BREAK)
+  {
+    --m_CurHistory;
+  }
+  
+  if (m_CurHistory == 0)
+  {
+    return;
+  }
+  
+  const History*  history = &m_History[m_CurHistory - 1];
   switch (history->m_Type)
   {
   case (HISTORY_WRITE):
-    m_Buffer.Erase(history->m_Write.m_LowerBound, history->m_Write.m_UpperBound);
-    m_Cursor = history->m_Write.m_LowerBound;
+    m_Buffer.Erase(history->m_LowerBound, history->m_UpperBound);
+    m_Cursor = history->m_LowerBound;
     m_Flags |= FRAME_UNSAVED;
     break;
   case (HISTORY_ERASE):
-    m_Buffer.Insert(
-      history->m_Erase.m_Data,
-      history->m_Erase.m_UpperBound - history->m_Erase.m_LowerBound,
-      history->m_Erase.m_LowerBound
-    );
-    m_Cursor = history->m_Erase.m_UpperBound;
+    m_Buffer.Insert(history->m_Data, history->m_UpperBound - history->m_LowerBound, history->m_LowerBound);
+    m_Cursor = history->m_UpperBound;
     m_Flags |= FRAME_UNSAVED;
-    free(history->m_Erase.m_Data);
     break;
   default:
     break;
   }
   
-  --m_HistoryLength;
+  --m_CurHistory;
+}
+
+void  Frame::Redo()
+{
+  while (m_CurHistory < m_HistoryLength && m_History[m_CurHistory].m_Type == HISTORY_BREAK)
+  {
+    ++m_CurHistory;
+  }
+  
+  if (m_CurHistory == m_HistoryLength)
+  {
+    return;
+  }
+  
+  const History*  history = &m_History[m_CurHistory];
+  switch (history->m_Type)
+  {
+  case (HISTORY_ERASE):
+    m_Buffer.Erase(history->m_LowerBound, history->m_UpperBound);
+    m_Cursor = history->m_LowerBound;
+    m_Flags |= FRAME_UNSAVED;
+    break;
+  case (HISTORY_WRITE):
+    m_Buffer.Insert(history->m_Data, history->m_UpperBound - history->m_LowerBound, history->m_LowerBound);
+    m_Cursor = history->m_UpperBound;
+    m_Flags |= FRAME_UNSAVED;
+    break;
+  default:
+    break;
+  }
+  
+  ++m_CurHistory;
 }
 
 void  Frame::BreakHistory()
@@ -370,10 +376,28 @@ void  Frame::BreakHistory()
     m_History = (History*)reallocarray(m_History, m_HistoryCapacity, sizeof(History));
   }
   
-  m_History[m_HistoryLength++] = (History)
+  TruncateHistory();
+  m_History[m_HistoryLength] = (History)
   {
-    .m_Type = HISTORY_BREAK
+    .m_Data       = nullptr,
+    .m_LowerBound = 0,
+    .m_UpperBound = 0,
+    .m_Type       = HISTORY_BREAK
   };
+  ++m_HistoryLength;
+  ++m_CurHistory;
+}
+
+void  Frame::TruncateHistory()
+{
+  for (usize i = m_CurHistory; i < m_HistoryLength; ++i)
+  {
+    if (m_History[i].m_Data)
+    {
+      free(m_History[i].m_Data);
+    }
+  }
+  m_HistoryLength = m_CurHistory;
 }
 
 void  Frame::SaveCursor()
@@ -548,7 +572,8 @@ void  EmptyFrame(OUT Frame& frame)
     .m_Flags            = 0,
     .m_History          = (History*)calloc(1, sizeof(History)),
     .m_HistoryLength    = 0,
-    .m_HistoryCapacity  = 1
+    .m_HistoryCapacity  = 1,
+    .m_CurHistory       = 0
   };
 }
 
@@ -564,7 +589,8 @@ void  StringFrame(OUT Frame& frame, const char* str)
     .m_Flags            = 0,
     .m_History          = (History*)calloc(1, sizeof(History)),
     .m_HistoryLength    = 0,
-    .m_HistoryCapacity  = 1
+    .m_HistoryCapacity  = 1,
+    .m_CurHistory       = 0
   };
 }
 
@@ -610,7 +636,8 @@ i32 FileFrame(OUT Frame& frame, const char* path)
     .m_Flags            = 0,
     .m_History          = (History*)calloc(1, sizeof(History)),
     .m_HistoryLength    = 0,
-    .m_HistoryCapacity  = 1
+    .m_HistoryCapacity  = 1,
+    .m_CurHistory       = 0
   };
   return (0);
 }

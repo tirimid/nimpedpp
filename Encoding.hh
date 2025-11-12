@@ -111,6 +111,7 @@ struct EString
   
   char*   ToCString() const;
   EString Copy() const;
+  EChar*  CopyData() const;
   void    Free();
   void    IncreaseAllocation();
   void    Insert(EChar ch, u32 pos);

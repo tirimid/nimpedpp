@@ -40,6 +40,7 @@ static void PromptDeleteBack();
 static void PromptDeleteWord();
 static void Newline();
 static void Undo();
+static void Redo();
 static void NewFrame();
 static void KillFrame();
 static void Save();
@@ -88,6 +89,7 @@ void  InstallBaseBinds()
   Bind(KEYBIND::PREVIOUS,               Binds::Previous);
   Bind(KEYBIND::WRITE_MODE,             Binds::WriteMode);
   Bind(KEYBIND::UNDO,                   Binds::Undo);
+  Bind(KEYBIND::REDO,                   Binds::Redo);
   Bind(KEYBIND::NEW_FRAME,              Binds::NewFrame);
   Bind(KEYBIND::KILL_FRAME,             Binds::KillFrame);
   Bind(KEYBIND::SAVE,                   Binds::Save);
@@ -627,13 +629,25 @@ static void Newline()
 static void Undo()
 {
   Frame&  f = CurrentFrame();
-  if (!f.m_HistoryLength)
+  if (f.m_CurHistory == 0)
   {
     Info("Binds: Nothing to undo");
     return;
   }
   
   f.Undo();
+}
+
+static void Redo()
+{
+  Frame&  f = CurrentFrame();
+  if (f.m_CurHistory == f.m_HistoryLength)
+  {
+    Info("Binds: Nothing to redo");
+    return;
+  }
+  
+  f.Redo();
 }
 
 static void NewFrame()
@@ -1165,11 +1179,13 @@ static void CutLines()
 static void CopyUntilLine()
 {
   // TODO: implement CopyUntilLine() bind
+  Error("Binds: CopyUntilLine() not implemented!");
 }
 
 static void CutUntilLine()
 {
   // TODO: implement CutUntilLine() bind
+  Error("Binds: CutUntilLine() not implemented!");
 }
 
 static void Zoom()

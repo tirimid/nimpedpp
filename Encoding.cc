@@ -140,9 +140,16 @@ EString EString::Copy() const
   newEString.m_Data     = (EChar*)calloc(m_Capacity, sizeof(EChar));
   newEString.m_Length   = m_Length;
   newEString.m_Capacity = m_Capacity;
-  memcpy(newEString.m_Data, m_Data, m_Capacity * sizeof(EChar));
+  memcpy(newEString.m_Data, m_Data, sizeof(EChar) * m_Capacity);
   
   return (newEString);
+}
+
+EChar*  EString::CopyData() const
+{
+  EChar*  data  = (EChar*)calloc(m_Length, sizeof(EChar));
+  memcpy(data, m_Data, sizeof(EChar) * m_Length);
+  return (data);
 }
 
 void  EString::Free()
