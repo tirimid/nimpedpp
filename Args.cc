@@ -46,7 +46,7 @@ i32 ParseArgs(i32 argc, char* argv[])
     {
       u64 firstID   = FileID(g_Args.m_Files[i], true);
       u64 secondID  = FileID(g_Args.m_Files[j], true);
-      if (firstID == secondID)
+      if (firstID && secondID && firstID == secondID)
       {
         Error("Args: Cannot open the same file twice: %s!", g_Args.m_Files[i]);
         return (1);
