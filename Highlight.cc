@@ -18,11 +18,15 @@ constexpr const char* JS_WORD       = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNO
 constexpr const char* CC_SPECIAL    = C_SPECIAL;
 constexpr const char* CC_WORD_INIT  = C_WORD_INIT;
 constexpr const char* CC_WORD       = C_WORD;
+constexpr const char* PY_SPECIAL    = "+=-*/%&|^<>@:~()[]{},!;@";
+constexpr const char* PY_WORD_INIT  = C_WORD_INIT;
+constexpr const char* PY_WORD       = C_WORD;
 
 static Region FindC(const Frame& frame, u32 from);
 static Region FindCC(const Frame& frame, u32 from);
 static Region FindSh(const Frame& frame, u32 from);
 static Region FindJS(const Frame& frame, u32 from);
+static Region FindPy(const Frame& frame, u32 from);
 static bool   CompareString(const Frame& f, const char* cmp, u32 at);
 static bool   CompareAny(const Frame& f, const char* cmp, u32 at);
 static Region LineComment(const Frame& f, u32 from);
@@ -36,6 +40,7 @@ static Region CWord(const Frame& f, u32 from);
 static Region ShWord(const Frame& f, u32 from);
 static Region JSWord(const Frame& f, u32 from);
 static Region CCWord(const Frame& f, u32 from);
+static Region PyWord(const Frame& f, u32 from);
 
 Region  FindHighlight(const Frame& frame, u32 from)
 {
@@ -69,6 +74,11 @@ Region  FindHighlight(const Frame& frame, u32 from)
   else if (!strcmp(extension, "js"))
   {
     Region  region  = FindJS(frame, from);
+    return (region);
+  }
+  else if (!strcmp(extension, "py"))
+  {
+    Region  region  = FindPy(frame, from);
     return (region);
   }
   else
@@ -232,8 +242,6 @@ static Region FindJS(const Frame& frame, u32 from)
 {
   for (u32 i = from; i < frame.m_Buffer.m_Length; ++i)
   {
-    // regex highlight will not be implemented
-    
     if (CompareString(frame, "//", i) || CompareString(frame, "#!", i))
     {
       Region  region  = LineComment(frame, i);
@@ -262,6 +270,46 @@ static Region FindJS(const Frame& frame, u32 from)
     else if (CompareAny(frame, JS_SPECIAL, i))
     {
       Region  region  = Special(frame, i, JS_SPECIAL);
+      return (region);
+    }
+  }
+  
+  Region  region  =
+  {
+    .m_LowerBound = frame.m_Buffer.m_Length,
+    .m_UpperBound = frame.m_Buffer.m_Length,
+    .m_Color      {}
+  };
+  return (region);
+}
+
+static Region FindPy(const Frame& frame, u32 from)
+{
+  for (u32 i = from; i < frame.m_Buffer.m_Length; ++i)
+  {
+    if (CompareString(frame, "#", i))
+    {
+      Region  region  = LineComment(frame, i);
+      return (region);
+    }
+    else if (CompareAny(frame, NUMBER_INIT, i))
+    {
+      Region  region  = Number(frame, i);
+      return (region);
+    }
+    else if (CompareAny(frame, PY_SPECIAL, i))
+    {
+      Region  region  = Special(frame, i, PY_SPECIAL);
+      return (region);
+    }
+    else if (CompareAny(frame, PY_WORD_INIT, i))
+    {
+      Region  region  = PyWord(frame, i);
+      return (region);
+    }
+    else if (CompareAny(frame, "\"'", i))
+    {
+      Region  region  = String(frame, i, true, false);
       return (region);
     }
   }
@@ -624,6 +672,55 @@ static Region CCWord(const Frame& f, u32 from)
     }
   }
   
+  while (next < f.m_Buffer.m_Length && f.m_Buffer.m_Data[next].IsSpace())
+  {
+    ++next;
+  }
+  
+  if (next < f.m_Buffer.m_Length && f.m_Buffer.m_Data[next].m_Codepoint == '(')
+  {
+    region.m_Color = g_Options.m_Emphasis;
+    return (region);
+  }
+  
+  if (isupper(f.m_Buffer.m_Data[from].m_Codepoint))
+  {
+    region.m_Color = g_Options.m_Type;
+    return (region);
+  }
+  
+  return (region);
+}
+
+static Region PyWord(const Frame& f, u32 from)
+{
+  i32 nLower  = 0;
+  u32 end     = from;
+  while (end < f.m_Buffer.m_Length && strchr(PY_WORD, f.m_Buffer.m_Data[end].m_Codepoint))
+  {
+    nLower += islower(f.m_Buffer.m_Data[end].m_Codepoint);
+    ++end;
+  }
+  
+  Region  region  =
+  {
+    .m_LowerBound = from,
+    .m_UpperBound = end,
+    .m_Color      = g_Options.m_Normal
+  };
+  
+  if (TryKeyword(region, f, from, end, LANG_MODE_PY))
+  {
+    return (region);
+  }
+  
+  if (nLower == 0)
+  {
+    region.m_Color = g_Options.m_Macro;
+    return (region);
+  }
+  
+  u32 next  = end;
   while (next < f.m_Buffer.m_Length && f.m_Buffer.m_Data[next].IsSpace())
   {
     ++next;

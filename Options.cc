@@ -121,6 +121,7 @@ i32 ParseOptions()
   ReadLangConfig(file, "ShKeyword", "ShPrimitive", LANG_MODE_SH);
   ReadLangConfig(file, "JSKeyword", "JSPrimitive", LANG_MODE_JS);
   ReadLangConfig(file, "CCKeyword", "CCPrimitive", LANG_MODE_CC);
+  ReadLangConfig(file, "PyKeyword", "PyPrimitive", LANG_MODE_PY);
   
   fclose(file);
   return (0);

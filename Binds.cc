@@ -1142,7 +1142,7 @@ static void CutLines()
   
   if (lines == 0)
   {
-    Info("Binds: Ignoring copy of zero lines");
+    Info("Binds: Ignoring cut of zero lines");
     return;
   }
   
@@ -1178,14 +1178,149 @@ static void CutLines()
 
 static void CopyUntilLine()
 {
-  // TODO: implement CopyUntilLine() bind
-  Error("Binds: CopyUntilLine() not implemented!");
+  InstallNumberPromptBinds();
+  BeginPrompt("Copy until line: ");
+  while (!g_Prompt.m_Status)
+  {
+    RenderEditor();
+    RenderPrompt();
+    RenderPresent();
+    
+    EChar key = ReadKey();
+    if (key.m_Codepoint < 128 && key.IsDigit())
+    {
+      PromptWrite(key, g_Prompt.m_Cursor);
+      ++g_Prompt.m_Cursor;
+    }
+  }
+  EndPrompt();
+  InstallBaseBinds();
+  
+  if (g_Prompt.m_Status == PROMPT_FAIL)
+  {
+    return;
+  }
+  
+  char* lineString  = PromptDataCString();
+  u64   line        = strtoll(lineString, nullptr, 10);
+  free(lineString);
+  
+  Frame&  f = CurrentFrame();
+  
+  u32 begin = f.m_Cursor;
+  while (begin > 0 && f.m_Buffer.m_Data[begin - 1].m_Codepoint != '\n')
+  {
+    --begin;
+  }
+  
+  u32 end = 0;
+  while (end < f.m_Buffer.m_Length)
+  {
+    line -= f.m_Buffer.m_Data[end].m_Codepoint == '\n';
+    if (line == 0)
+    {
+      break;
+    }
+    ++end;
+  }
+  
+  if (begin > end)
+  {
+    u32 tmp = begin;
+    begin = end;
+    end = tmp;
+    
+    while (begin > 0 && f.m_Buffer.m_Data[begin - 1].m_Codepoint != '\n')
+    {
+      --begin;
+    }
+    
+    while (end < f.m_Buffer.m_Length && f.m_Buffer.m_Data[end].m_Codepoint != '\n')
+    {
+      ++end;
+    }
+  }
+  
+  g_Editor.m_Clipboard.Free();
+  g_Editor.m_Clipboard = f.m_Buffer.Substring(begin, end);
+  
+  Info("Binds: Copied %u characters", end - begin);
 }
 
 static void CutUntilLine()
 {
-  // TODO: implement CutUntilLine() bind
-  Error("Binds: CutUntilLine() not implemented!");
+  InstallNumberPromptBinds();
+  BeginPrompt("Cut until line: ");
+  while (!g_Prompt.m_Status)
+  {
+    RenderEditor();
+    RenderPrompt();
+    RenderPresent();
+    
+    EChar key = ReadKey();
+    if (key.m_Codepoint < 128 && key.IsDigit())
+    {
+      PromptWrite(key, g_Prompt.m_Cursor);
+      ++g_Prompt.m_Cursor;
+    }
+  }
+  EndPrompt();
+  InstallBaseBinds();
+  
+  if (g_Prompt.m_Status == PROMPT_FAIL)
+  {
+    return;
+  }
+  
+  char* lineString  = PromptDataCString();
+  u64   line        = strtoll(lineString, nullptr, 10);
+  free(lineString);
+  
+  Frame&  f = CurrentFrame();
+  
+  u32 begin = f.m_Cursor;
+  while (begin > 0 && f.m_Buffer.m_Data[begin - 1].m_Codepoint != '\n')
+  {
+    --begin;
+  }
+  
+  u32 end = 0;
+  while (end < f.m_Buffer.m_Length)
+  {
+    line -= f.m_Buffer.m_Data[end].m_Codepoint == '\n';
+    if (line == 0)
+    {
+      break;
+    }
+    ++end;
+  }
+  
+  if (begin > end)
+  {
+    u32 tmp = begin;
+    begin = end;
+    end = tmp;
+    
+    while (begin > 0 && f.m_Buffer.m_Data[begin - 1].m_Codepoint != '\n')
+    {
+      --begin;
+    }
+    
+    while (end < f.m_Buffer.m_Length && f.m_Buffer.m_Data[end].m_Codepoint != '\n')
+    {
+      ++end;
+    }
+  }
+  
+  g_Editor.m_Clipboard.Free();
+  g_Editor.m_Clipboard = f.m_Buffer.Substring(begin, end);
+  
+  f.SaveCursor();
+  f.Erase(begin, end + (end < f.m_Buffer.m_Length));
+  f.m_Cursor = begin;
+  f.LoadCursor();
+  
+  Info("Binds: Cut %u characters", end - begin);
 }
 
 static void Zoom()

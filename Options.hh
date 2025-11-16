@@ -17,6 +17,7 @@ enum LangMode
   LANG_MODE_SH,
   LANG_MODE_JS,
   LANG_MODE_CC,
+  LANG_MODE_PY,
   
   LANG_MODE_END
 };

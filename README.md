@@ -12,9 +12,10 @@ editor with modal keyboard controls, just like its parent, nimped.
 
 ## Dependencies
 
-* Premake
-* A C++ compiler for C++20
+* Premake (for build)
+* A C++ compiler for C++20 (for build)
 * A terminal / shell environment to run nimped++
+* Linux environment (nimped++ has not been tested on other platforms)
 
 ## Management
 
