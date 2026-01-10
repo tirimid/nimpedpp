@@ -125,7 +125,7 @@ void  DestroyFrame(usize idx)
     return;
   }
   
-  memmove(&g_Editor.m_Frames[idx], &g_Editor.m_Frames[idx + 1], sizeof(Frame) * (g_Editor.m_NFrames - idx));
+  memmove(&g_Editor.m_Frames[idx], &g_Editor.m_Frames[idx + 1], sizeof(Frame) * (g_Editor.m_NFrames - idx - 1));
   --g_Editor.m_NFrames;
   
   if (g_Editor.m_CurFrame && g_Editor.m_CurFrame >= idx)
