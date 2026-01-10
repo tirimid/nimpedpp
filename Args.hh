@@ -11,6 +11,7 @@ struct Args
   const char* m_Files[FUNCTIONAL::MAX_FILES];
   usize       m_NFiles;
   bool        m_CreateFiles;
+  i32         m_Fuzz;
 };
 
 extern Args g_Args;

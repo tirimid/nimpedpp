@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <Args.hh>
+#include <cstdlib>
 #include <Editor.hh>
 #include <Options.hh>
 #include <Render.hh>
+#include <ctime>
 
 int main(int argc, char* argv[])
 {
+  srand(time(nullptr));
+  
   if (ParseArgs(argc, argv))
   {
     return (1);

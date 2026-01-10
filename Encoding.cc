@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include <Args.hh>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -277,7 +278,15 @@ EString::EString(const char* cString)
 
 EChar ReadEChar()
 {
-  return (ReadEChar(stdin));
+  if (g_Args.m_Fuzz > 0)
+  {
+    --g_Args.m_Fuzz;
+    return (rand() % 128); // only fuzz test with chars with encoding <128 as only they are used in commands
+  }
+  else
+  {
+    return (ReadEChar(stdin));
+  }
 }
 
 EChar ReadEChar(FILE* file)

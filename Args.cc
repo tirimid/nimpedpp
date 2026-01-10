@@ -11,12 +11,20 @@ static void Usage(const char* name);
 i32 ParseArgs(i32 argc, char* argv[])
 {
   i32 ch  {};
-  while (ch = getopt(argc, (char* const*)argv, "cho:"), ch != -1)
+  while (ch = getopt(argc, (char* const*)argv, "cf:ho:"), ch != -1)
   {
     switch (ch)
     {
     case ('c'):
       g_Args.m_CreateFiles = true;
+      break;
+    case ('f'):
+      g_Args.m_Fuzz = strtol(optarg, nullptr, 10);
+      if (g_Args.m_Fuzz <= 0)
+      {
+        Error("Args: Cannot specify fuzz inputs of %d!", g_Args.m_Fuzz);
+        return (1);
+      }
       break;
     case ('h'):
       Usage(argv[0]);
@@ -69,6 +77,7 @@ static void Usage(const char* name)
     "\n"
     "Options:\n"
     "  -c           Create files if they don't exist\n"
+    "  -f num       Send a given number of random inputs on start\n"
     "  -h           Display this help information\n"
     "  -o dir       Use a different config directory\n"
     "\n"
