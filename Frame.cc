@@ -221,7 +221,15 @@ void  Frame::Write(const EString& str, u32 pos)
   m_Flags |= FRAME_UNSAVED;
   
   // push history entry
-  TruncateHistory();
+  if (m_CurHistory < m_HistoryLength)
+  {
+    BreakHistory();
+  }
+  else
+  {
+    TruncateHistory();
+  }
+  
   History*  history = m_HistoryLength ? &m_History[m_HistoryLength - 1] : nullptr;
   if (history && history->m_Type == HISTORY_WRITE && history->m_UpperBound == pos)
   {
@@ -260,6 +268,15 @@ void  Frame::Write(const char* str, u32 pos)
 void  Frame::Erase(u32 lb, u32 ub)
 {
   // push history entry
+  if (m_CurHistory < m_HistoryLength)
+  {
+    BreakHistory();
+  }
+  else
+  {
+    TruncateHistory();
+  }
+  
   History*  history = m_HistoryLength ? &m_History[m_HistoryLength - 1] : nullptr;
   if (history && history->m_Type == HISTORY_ERASE && history->m_LowerBound == ub)
   {
