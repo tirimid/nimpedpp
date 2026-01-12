@@ -55,6 +55,7 @@ struct Frame
   void  LoadCursor();
   void  ComputeBounds(u32 w, u32 h);
   u32   Tabulate(u32 at);
+  bool  VisualPosition(OUT u32& x, OUT u32& y, u32 pos, u32 w) const;
 };
 
 void  EmptyFrame(OUT Frame& frame);

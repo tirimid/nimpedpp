@@ -6,4 +6,4 @@
 
 void            GatherCompletions();
 const EString*  CompleteWord(const EString& word);
-void            RenderCompletion();
+void            RenderCompletion(usize frame, const EString& word);

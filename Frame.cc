@@ -583,6 +583,59 @@ u32 Frame::Tabulate(u32 at)
   }
 }
 
+bool  Frame::VisualPosition(OUT u32& x, OUT u32& y, u32 pos, u32 w) const
+{
+  u32 lastLine  = 1;
+  for (u32 i = 0; i < m_Buffer.m_Length; ++i)
+  {
+    lastLine += m_Buffer.m_Data[i].m_Codepoint == '\n';
+  }
+  
+  u32 lineNumberLength  = 0;
+  while (lastLine)
+  {
+    ++lineNumberLength;
+    lastLine /= 10;
+  }
+  
+  u32 leftPad = g_Options.m_LeftGutter + g_Options.m_RightGutter + lineNumberLength;
+  
+  x = 0;
+  y = 0;
+  for (usize i = m_Start; i < m_Buffer.m_Length; ++i)
+  {
+    if (leftPad + x >= w)
+    {
+      x = 0;
+      ++y;
+    }
+    
+    if (i == pos)
+    {
+      return (true);
+    }
+    
+    u32 cw  {};
+    switch (m_Buffer.m_Data[i].m_Codepoint)
+    {
+    case ('\n'):
+      x = 0;
+      ++y;
+      continue;
+    case ('\t'):
+      cw = g_Options.m_TabSize - x % g_Options.m_TabSize;
+      break;
+    default:
+      cw = 1;
+      break;
+    }
+    
+    x += cw;
+  }
+  
+  return (false);
+}
+
 void  EmptyFrame(OUT Frame& frame)
 {
   frame = (Frame)

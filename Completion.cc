@@ -93,9 +93,29 @@ const EString*  CompleteWord(const EString& word)
   return (nullptr);
 }
 
-void  RenderCompletion()
+void  RenderCompletion(usize frame, const EString& word)
 {
-  // TODO: implement RenderCompletion()
+  const Frame&  f = g_Editor.m_Frames[frame];
+  
+  u32 start = f.m_Cursor;
+  while (start > 0 && f.m_Buffer.m_Data[start].IsWord())
+  {
+    --start;
+  }
+  start += !f.m_Buffer.m_Data[start].IsWord();
+  
+  u32 x {};
+  u32 y {};
+  u32 w {};
+  u32 h {};
+  ArrangeFrame(frame, x, y, w, h);
+  
+  u32 startX  {};
+  u32 startY  {};
+  if (f.VisualPosition(startX, startY, start, w))
+  {
+    // TODO: implement visual completion highlight
+  }
 }
 
 void  WordList::IncreaseAllocation()

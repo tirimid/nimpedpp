@@ -2,6 +2,7 @@
 
 #include <Args.hh>
 #include <Binds.hh>
+#include <Completion.hh>
 #include <cstring>
 #include <Editor.hh>
 #include <Input.hh>
@@ -39,9 +40,14 @@ i32 InitEditor()
 void  EditorLoop()
 {
   g_Editor.m_Running = true;
+  const EString*  completion  = nullptr;
   while (g_Editor.m_Running)
   {
     RenderEditor();
+    if (completion)
+    {
+      RenderCompletion(g_Editor.m_CurFrame, *completion);
+    }
     RenderPresent();
     
     EChar input = ReadKey();
@@ -54,8 +60,18 @@ void  EditorLoop()
       
       if (f.m_Buffer.m_Data[f.m_Cursor - 1].IsWord())
       {
+        u32 start = f.m_Cursor - 1;
+        while (start > 0 && f.m_Buffer.m_Data[start].IsWord())
+        {
+          --start;
+        }
+        start += !f.m_Buffer.m_Data[start].IsWord();
+        
         GatherCompletions();
-        RenderCompletion();
+        
+        EString tryCompletion = f.m_Buffer.Substring(start, f.m_Cursor);
+        completion = CompleteWord(tryCompletion);
+        tryCompletion.Free();
       }
     }
   }
