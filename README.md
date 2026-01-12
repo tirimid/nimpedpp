@@ -13,20 +13,15 @@ editor with modal keyboard controls, just like its parent, nimped.
 ## Dependencies
 
 * Premake (for build)
+* GNU Make (for build)
 * A C++ compiler for C++20 (for build)
 * A terminal / shell environment to run nimped++
 * Linux environment (nimped++ has not been tested on other platforms)
 
 ## Management
 
-Build using Premake; there are Debug and Release configurations.
-
-* `./manage.sh install`: run as root to install nimped++ to the system
-* `./manage.sh install-config theme`: run to install nimped++ config to user
-  home; the `theme` should be replaced with the name of a file in `themes/`,
-  e.g. `ridiculous-light` (without `.conf`)
-* `./manage.sh uninstall`: run as root to remove nimped++ from the system
-* `./manage.sh uninstall-config`: run to remove nimped++ config from user home
+Run `./manage.sh` to see the help information. This script automates project
+build, installation, and uninstallation.
 
 ## Usage
 
