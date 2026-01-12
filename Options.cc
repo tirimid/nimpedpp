@@ -6,12 +6,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
-#include <Options.hh>
-
-extern "C"
-{
 #include <pwd.h>
-}
+#include <Options.hh>
 
 DynamicOptions  g_Options;
 

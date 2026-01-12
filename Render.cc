@@ -5,12 +5,8 @@
 #include <cstdlib>
 #include <Prompt.hh>
 #include <Render.hh>
-
-extern "C"
-{
 #include <sys/ioctl.h>
 #include <termios.h>
-}
 
 static void ApplyColor(Color color);
 static void SIGWINCHHandler(int arg);

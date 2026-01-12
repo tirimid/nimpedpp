@@ -4,11 +4,7 @@
 
 #include <cstddef>
 #include <cstdint>
-
-extern "C"
-{
 #include <unistd.h>
-}
 
 #define OUT
 #define IN_OUT

@@ -4,13 +4,9 @@
 #include <climits>
 #include <cstdlib>
 #include <cstring>
+#include <dirent.h>
 #include <Prompt.hh>
 #include <Render.hh>
-
-extern "C"
-{
-#include <dirent.h>
-}
 
 Prompt  g_Prompt =
 {

@@ -6,12 +6,8 @@
 #include <cstring>
 #include <Editor.hh>
 #include <Render.hh>
-#include <Util.hh>
-
-extern "C"
-{
 #include <sys/stat.h>
-}
+#include <Util.hh>
 
 void  Info(const char* fmt, ...)
 {

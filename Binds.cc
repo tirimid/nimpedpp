@@ -69,7 +69,8 @@ static void RecordMacro();
 static void ExecuteMacro();
 static void Help();
 static void Tab();
-static void Complete();
+static void CompletePrompt();
+static void CompleteWord();
 
 }
 
@@ -119,16 +120,17 @@ void  InstallBaseBinds()
 void  InstallWriteBinds()
 {
   Unbind();
-  Bind(KEYBIND::EXIT,         Binds::Exit);
-  Bind(KEYBIND::DELETE_FRONT, Binds::FrameDeleteFront);
-  Bind(KEYBIND::DELETE_BACK,  Binds::FrameDeleteBack);
-  Bind(KEYBIND::DELETE_WORD,  Binds::FrameDeleteWord);
-  Bind(KEYBIND::NEWLINE,      Binds::Newline);
-  Bind(KEYBIND::LEFT_PAREN,   Binds::FrameLeftParen);
-  Bind(KEYBIND::LEFT_BRACKET, Binds::FrameLeftBracket);
-  Bind(KEYBIND::LEFT_BRACE,   Binds::FrameLeftBrace);
-  Bind(KEYBIND::DOUBLE_QUOTE, Binds::FrameDoubleQuote);
-  Bind(KEYBIND::TAB,          Binds::Tab);
+  Bind(KEYBIND::EXIT,           Binds::Exit);
+  Bind(KEYBIND::DELETE_FRONT,   Binds::FrameDeleteFront);
+  Bind(KEYBIND::DELETE_BACK,    Binds::FrameDeleteBack);
+  Bind(KEYBIND::DELETE_WORD,    Binds::FrameDeleteWord);
+  Bind(KEYBIND::NEWLINE,        Binds::Newline);
+  Bind(KEYBIND::LEFT_PAREN,     Binds::FrameLeftParen);
+  Bind(KEYBIND::LEFT_BRACKET,   Binds::FrameLeftBracket);
+  Bind(KEYBIND::LEFT_BRACE,     Binds::FrameLeftBrace);
+  Bind(KEYBIND::DOUBLE_QUOTE,   Binds::FrameDoubleQuote);
+  Bind(KEYBIND::TAB,            Binds::Tab);
+  Bind(KEYBIND::COMPLETE_WORD,  Binds::CompleteWord);
   OrganizeInputs();
   
   g_Editor.m_WriteInput = true;
@@ -173,7 +175,7 @@ void  InstallPathPromptBinds()
   Bind(KEYBIND::DELETE_FRONT,           Binds::PromptDeleteFront);
   Bind(KEYBIND::DELETE_BACK,            Binds::PromptDeleteBack);
   Bind(KEYBIND::DELETE_WORD,            Binds::PromptDeleteWord);
-  Bind(KEYBIND::COMPLETE,               Binds::Complete);
+  Bind(KEYBIND::COMPLETE_PROMPT,        Binds::CompletePrompt);
   Bind(KEYBIND::LEFT_PAREN,             Binds::PromptLeftParen);
   Bind(KEYBIND::LEFT_BRACKET,           Binds::PromptLeftBracket);
   Bind(KEYBIND::LEFT_BRACE,             Binds::PromptLeftBrace);
@@ -751,7 +753,10 @@ static void Focus()
 {
   Frame tmp = CurrentFrame();
   CurrentFrame() = g_Editor.m_Frames[0];
+  CurrentFrame().m_Flags |= FRAME_GATHER;
   g_Editor.m_Frames[0] = tmp;
+  g_Editor.m_Frames[0].m_Flags |= FRAME_GATHER;
+  
   g_Editor.m_CurFrame = 0;
 }
 
@@ -1432,9 +1437,14 @@ static void Tab()
   f.SaveCursor();
 }
 
-static void Complete()
+static void CompletePrompt()
 {
   CompletePromptPath();
+}
+
+static void CompleteWord()
+{
+  // TODO: implement
 }
 
 }

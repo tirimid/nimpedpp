@@ -7,7 +7,8 @@
 
 enum FrameFlag : u64
 {
-  FRAME_UNSAVED = 0x1
+  FRAME_UNSAVED = 0x1,
+  FRAME_GATHER  = 0x2
 };
 
 enum HistoryType : u8

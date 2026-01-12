@@ -125,6 +125,7 @@ struct FRAME
     "    [          Insert a smart left-bracket\n"
     "    {          Insert a smart left-brace\n"
     "    \"          Insert a smart double-quote\n"
+    "    M-TAB      Complete the current word\n"
     "\n"
     "  Prompt mode:\n"
     "\n"
@@ -144,7 +145,8 @@ struct FRAME
     "    (          (Text prompts) Insert a smart left-paren\n"
     "    [          (Text prompts) Insert a smart left-bracket\n"
     "    {          (Text prompts) Insert a smart left-brace\n"
-    "    \"          (Text prompts) Insert a smart double-quote\n";
+    "    \"          (Text prompts) Insert a smart double-quote\n"
+    "    TAB        (File prompts) Complete the name of a file\n";
 };
 
 struct VISUAL
@@ -187,7 +189,8 @@ struct KEYBIND
   static constexpr EChar  SAVE[]                    = {KEY_CTRL('s'), KEY_END};
   static constexpr EChar  FOCUS[]                   = {KEY('m'), KEY_END};
   static constexpr EChar  OPEN_FILE[]               = {KEY_CTRL('f'), KEY_END};
-  static constexpr EChar  COMPLETE[]                = {KEY(9), KEY_END};
+  static constexpr EChar  COMPLETE_PROMPT[]         = {KEY(9), KEY_END};
+  static constexpr EChar  COMPLETE_WORD[]           = {KEY_META(9), KEY_END};
   static constexpr EChar  SEARCH[]                  = {KEY('/'), KEY_END};
   static constexpr EChar  REVERSE_SEARCH[]          = {KEY('?'), KEY_END};
   static constexpr EChar  LEFT_PAREN[]              = {KEY('('), KEY_END};

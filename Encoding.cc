@@ -100,6 +100,11 @@ bool  EChar::IsAlnum() const
   return (IsAlpha() || IsDigit());
 }
 
+bool  EChar::IsWord() const
+{
+  return (IsAlpha() || IsDigit() || m_Codepoint == '_');
+}
+
 usize EChar::EncodingLength() const
 {
   usize length  = !!m_Encoding[0] + !!m_Encoding[1] + !!m_Encoding[2] + !!m_Encoding[3];
@@ -252,6 +257,26 @@ EString EString::Substring(u32 lb, u32 ub) const
   memcpy(newString.m_Data, &m_Data[lb], sizeof(EChar) * (ub - lb));
   
   return (newString);
+}
+
+bool  EString::Equals(const EString& other) const
+{
+  if (m_Length != other.m_Length)
+  {
+    return (false);
+  }
+  
+  return (!memcmp(m_Data, other.m_Data, sizeof(EChar) * m_Length));
+}
+
+bool  EString::Equals(const EString& other, u32 checkLength) const
+{
+  if (m_Length < checkLength && other.m_Length == m_Length)
+  {
+    checkLength = m_Length;
+  }
+  
+  return (!memcmp(m_Data, other.m_Data, sizeof(EChar) * checkLength));
 }
 
 EString::EString()

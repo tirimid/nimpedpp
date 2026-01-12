@@ -51,6 +51,12 @@ void  EditorLoop()
       f.Write(input, f.m_Cursor);
       ++f.m_Cursor;
       f.SaveCursor();
+      
+      if (f.m_Buffer.m_Data[f.m_Cursor - 1].IsWord())
+      {
+        GatherCompletions();
+        RenderCompletion();
+      }
     }
   }
 }
@@ -131,6 +137,11 @@ void  DestroyFrame(usize idx)
   if (g_Editor.m_CurFrame && g_Editor.m_CurFrame >= idx)
   {
     --g_Editor.m_CurFrame;
+  }
+  
+  for (usize i = idx; i < g_Editor.m_NFrames; ++i)
+  {
+    g_Editor.m_Frames[i].m_Flags |= FRAME_GATHER;
   }
 }
 

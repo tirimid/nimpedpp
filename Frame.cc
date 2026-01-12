@@ -219,6 +219,7 @@ void  Frame::Write(const EString& str, u32 pos)
   // modify buffer
   m_Buffer.Insert(str, pos);
   m_Flags |= FRAME_UNSAVED;
+  m_Flags |= FRAME_GATHER;
   
   // push history entry
   if (m_CurHistory < m_HistoryLength)
@@ -309,6 +310,7 @@ void  Frame::Erase(u32 lb, u32 ub)
   // modify buffer
   m_Buffer.Erase(lb, ub);
   m_Flags |= FRAME_UNSAVED;
+  m_Flags |= FRAME_GATHER;
 }
 
 void  Frame::Erase(u32 pos)
@@ -340,11 +342,13 @@ void  Frame::Undo()
     m_Buffer.Erase(history->m_LowerBound, history->m_UpperBound);
     m_Cursor = history->m_LowerBound;
     m_Flags |= FRAME_UNSAVED;
+    m_Flags |= FRAME_GATHER;
     break;
   case (HISTORY_ERASE):
     m_Buffer.Insert(history->m_Data, history->m_UpperBound - history->m_LowerBound, history->m_LowerBound);
     m_Cursor = history->m_UpperBound;
     m_Flags |= FRAME_UNSAVED;
+    m_Flags |= FRAME_GATHER;
     break;
   default:
     break;
@@ -372,11 +376,13 @@ void  Frame::Redo()
     m_Buffer.Erase(history->m_LowerBound, history->m_UpperBound);
     m_Cursor = history->m_LowerBound;
     m_Flags |= FRAME_UNSAVED;
+    m_Flags |= FRAME_GATHER;
     break;
   case (HISTORY_WRITE):
     m_Buffer.Insert(history->m_Data, history->m_UpperBound - history->m_LowerBound, history->m_LowerBound);
     m_Cursor = history->m_UpperBound;
     m_Flags |= FRAME_UNSAVED;
+    m_Flags |= FRAME_GATHER;
     break;
   default:
     break;
@@ -586,7 +592,7 @@ void  EmptyFrame(OUT Frame& frame)
     .m_Start            = 0,
     .m_Cursor           = 0,
     .m_SavedCursorX     = 0,
-    .m_Flags            = 0,
+    .m_Flags            = FRAME_GATHER,
     .m_History          = (History*)calloc(1, sizeof(History)),
     .m_HistoryLength    = 0,
     .m_HistoryCapacity  = 1,
@@ -603,7 +609,7 @@ void  StringFrame(OUT Frame& frame, const char* str)
     .m_Start            = 0,
     .m_Cursor           = 0,
     .m_SavedCursorX     = 0,
-    .m_Flags            = 0,
+    .m_Flags            = FRAME_GATHER,
     .m_History          = (History*)calloc(1, sizeof(History)),
     .m_HistoryLength    = 0,
     .m_HistoryCapacity  = 1,
@@ -650,7 +656,7 @@ i32 FileFrame(OUT Frame& frame, const char* path)
     .m_Start            = 0,
     .m_Cursor           = 0,
     .m_SavedCursorX     = 0,
-    .m_Flags            = 0,
+    .m_Flags            = FRAME_GATHER,
     .m_History          = (History*)calloc(1, sizeof(History)),
     .m_HistoryLength    = 0,
     .m_HistoryCapacity  = 1,

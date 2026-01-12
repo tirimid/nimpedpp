@@ -17,6 +17,7 @@ struct EChar
   bool  IsAlpha() const;
   bool  IsDigit() const;
   bool  IsAlnum() const;
+  bool  IsWord() const;
   usize EncodingLength() const;
   
   constexpr EChar()
@@ -121,6 +122,8 @@ struct EString
   void    Erase(u32 lb, u32 ub);
   void    Erase(u32 pos);
   EString Substring(u32 lb, u32 ub) const;
+  bool    Equals(const EString& other) const;
+  bool    Equals(const EString& other, u32 checkLength) const;
   
   EString();
   EString(const char* cString);
