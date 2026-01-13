@@ -251,6 +251,8 @@ struct DynamicOptions
   Color       m_Margin;
   Color       m_Cursor;
   u8          m_CursorHighlightBG;
+  Color       m_CompleteCurrent;
+  Color       m_CompleteSuggestion;
   Color       m_Comment;
   Color       m_Macro;
   Color       m_Special;

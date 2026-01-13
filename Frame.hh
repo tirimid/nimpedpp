@@ -23,7 +23,7 @@ struct History
   EChar*      m_Data;
   u32         m_LowerBound;
   u32         m_UpperBound;
-  HistoryType m_Type;
+  HistoryType m_Type; // TODO: maybe refactor into an SoA-esque thing
 };
 
 struct Frame
@@ -39,23 +39,23 @@ struct Frame
   u32       m_HistoryCapacity;
   u32       m_CurHistory; // 1-based
   
-  void  Free();
-  void  Render(u32 x, u32 y, u32 w, u32 h, bool active) const;
-  i32   Save();
-  void  Write(EChar ch, u32 pos);
-  void  Write(const EString& str, u32 pos);
-  void  Write(const char* str, u32 pos);
-  void  Erase(u32 lb, u32 ub);
-  void  Erase(u32 pos);
-  void  Undo();
-  void  Redo();
-  void  BreakHistory();
-  void  TruncateHistory();
-  void  SaveCursor();
-  void  LoadCursor();
-  void  ComputeBounds(u32 w, u32 h);
-  u32   Tabulate(u32 at);
-  bool  VisualPosition(OUT u32& x, OUT u32& y, u32 pos, u32 w) const;
+  void      Free();
+  void      Render(u32 x, u32 y, u32 w, u32 h, bool active) const;
+  i32       Save();
+  void      Write(EChar ch, u32 pos);
+  void      Write(const EString& str, u32 pos);
+  void      Write(const char* str, u32 pos);
+  void      Erase(u32 lb, u32 ub);
+  void      Erase(u32 pos);
+  void      Undo();
+  void      Redo();
+  void      BreakHistory();
+  void      TruncateHistory();
+  void      SaveCursor();
+  void      LoadCursor();
+  void      ComputeBounds(u32 w, u32 h);
+  u32       Tabulate(u32 at);
+  bool      VisualPosition(OUT u32& x, OUT u32& y, u32 pos, u32 w) const;
 };
 
 void  EmptyFrame(OUT Frame& frame);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <Binds.hh>
+#include <Completion.hh>
 #include <cstdlib>
 #include <Editor.hh>
 #include <Input.hh>
@@ -70,7 +71,7 @@ static void ExecuteMacro();
 static void Help();
 static void Tab();
 static void CompletePrompt();
-static void CompleteWord();
+static void Autocomplete();
 
 }
 
@@ -130,7 +131,7 @@ void  InstallWriteBinds()
   Bind(KEYBIND::LEFT_BRACE,     Binds::FrameLeftBrace);
   Bind(KEYBIND::DOUBLE_QUOTE,   Binds::FrameDoubleQuote);
   Bind(KEYBIND::TAB,            Binds::Tab);
-  Bind(KEYBIND::COMPLETE_WORD,  Binds::CompleteWord);
+  Bind(KEYBIND::COMPLETE_WORD,  Binds::Autocomplete);
   OrganizeInputs();
   
   g_Editor.m_WriteInput = true;
@@ -1442,9 +1443,33 @@ static void CompletePrompt()
   CompletePromptPath();
 }
 
-static void CompleteWord()
+static void Autocomplete()
 {
-  // TODO: implement
+  Frame&  f = CurrentFrame();
+  
+  u32 start = f.m_Cursor;
+  while (start > 0 && f.m_Buffer.m_Data[start - 1].IsWord())
+  {
+    --start;
+  }
+  
+  if (start == f.m_Cursor)
+  {
+    return;
+  }
+  
+  EString         tryCompletion = f.m_Buffer.Substring(start, f.m_Cursor);
+  const EString*  completion    = CompleteWord(tryCompletion);
+  tryCompletion.Free();
+  if (!completion)
+  {
+    return;
+  }
+  
+  EString completionEnd = completion->Substring(f.m_Cursor - start, completion->m_Length);
+  f.Write(completionEnd, f.m_Cursor);
+  f.m_Cursor += completionEnd.m_Length;
+  completionEnd.Free();
 }
 
 }

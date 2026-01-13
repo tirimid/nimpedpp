@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <Editor.hh>
 #include <Options.hh>
+#include <Render.hh>
 #include <Util.hh>
 
 struct WordList
@@ -98,11 +99,10 @@ void  RenderCompletion(usize frame, const EString& word)
   const Frame&  f = g_Editor.m_Frames[frame];
   
   u32 start = f.m_Cursor;
-  while (start > 0 && f.m_Buffer.m_Data[start].IsWord())
+  while (start > 0 && f.m_Buffer.m_Data[start - 1].IsWord())
   {
     --start;
   }
-  start += !f.m_Buffer.m_Data[start].IsWord();
   
   u32 x {};
   u32 y {};
@@ -114,7 +114,18 @@ void  RenderCompletion(usize frame, const EString& word)
   u32 startY  {};
   if (f.VisualPosition(startX, startY, start, w))
   {
-    // TODO: implement visual completion highlight
+    u32 startSuggestX = startX + f.m_Cursor - start;
+    startSuggestX = startSuggestX > w ? w : startSuggestX;
+    
+    u32 endX  = startX + word.m_Length;
+    endX = endX > w ? w : endX;
+    
+    RenderFill(g_Options.m_CompleteCurrent, x + startX, y + startY, startSuggestX - startX, 1);
+    RenderFill(g_Options.m_CompleteSuggestion, x + startSuggestX, y + startY, endX - startSuggestX, 1);
+    for (u32 i = 0; i < word.m_Length && startX + i < w; ++i)
+    {
+      RenderPut(word.m_Data[i], x + startX + i, y + startY);
+    }
   }
 }
 

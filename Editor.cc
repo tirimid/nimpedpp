@@ -47,6 +47,7 @@ void  EditorLoop()
     if (completion)
     {
       RenderCompletion(g_Editor.m_CurFrame, *completion);
+      completion = nullptr;
     }
     RenderPresent();
     
@@ -61,11 +62,10 @@ void  EditorLoop()
       if (f.m_Buffer.m_Data[f.m_Cursor - 1].IsWord())
       {
         u32 start = f.m_Cursor - 1;
-        while (start > 0 && f.m_Buffer.m_Data[start].IsWord())
+        while (start > 0 && f.m_Buffer.m_Data[start - 1].IsWord())
         {
           --start;
         }
-        start += !f.m_Buffer.m_Data[start].IsWord();
         
         GatherCompletions();
         

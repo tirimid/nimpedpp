@@ -612,6 +612,7 @@ bool  Frame::VisualPosition(OUT u32& x, OUT u32& y, u32 pos, u32 w) const
     
     if (i == pos)
     {
+      x += leftPad;
       return (true);
     }
     
