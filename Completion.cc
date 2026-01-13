@@ -12,9 +12,6 @@ struct WordList
   EString*  m_Words;
   u32       m_Length;
   u32       m_Capacity;
-  
-  void      IncreaseAllocation();
-  void      Reset();
 };
 
 static WordList completions[FUNCTIONAL::MAX_FILES];
@@ -25,7 +22,11 @@ void  GatherCompletions()
   {
     if (g_Editor.m_Frames[i].m_Flags & FRAME_GATHER)
     {
-      completions[i].Reset();
+      for (u32 j = 0; j < completions[i].m_Length; ++j)
+      {
+        completions[i].m_Words[j].Free();
+      }
+      completions[i].m_Length = 0;
     }
   }
   
@@ -36,6 +37,8 @@ void  GatherCompletions()
     {
       continue;
     }
+    
+    WordList& words = completions[i];
     
     // extract all the words in the given frame
     usize start = 0;
@@ -60,13 +63,24 @@ void  GatherCompletions()
       }
       
       EString word  = f.m_Buffer.Substring(start, end);
-      if (completions[i].m_Length >= completions[i].m_Capacity)
+      for (u32 j = 0; j < words.m_Length; ++j)
       {
-        completions[i].IncreaseAllocation();
+        if (word.Equals(words.m_Words[j]))
+        {
+          word.Free();
+          goto nextWord;
+        }
       }
-      completions[i].m_Words[completions[i].m_Length] = word;
-      ++completions[i].m_Length;
       
+      if (words.m_Length >= words.m_Capacity)
+      {
+        words.m_Capacity = words.m_Words ? 2 * words.m_Capacity : 1;
+        words.m_Words = (EString*)reallocarray(words.m_Words, words.m_Capacity, sizeof(EString));
+      }
+      words.m_Words[words.m_Length] = word;
+      ++words.m_Length;
+      
+    nextWord:
       start = end + 1;
     }
     f.m_Flags &= ~FRAME_GATHER;
@@ -127,19 +141,4 @@ void  RenderCompletion(usize frame, const EString& word)
       RenderPut(word.m_Data[i], x + startX + i, y + startY);
     }
   }
-}
-
-void  WordList::IncreaseAllocation()
-{
-  m_Capacity = m_Words ? 2 * m_Capacity : 1;
-  m_Words = (EString*)reallocarray(m_Words, m_Capacity, sizeof(EString));
-}
-
-void  WordList::Reset()
-{
-  for (u32 i = 0; i < m_Length; ++i)
-  {
-    m_Words[i].Free();
-  }
-  m_Length = 0;
 }
