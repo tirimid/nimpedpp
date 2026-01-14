@@ -20,8 +20,8 @@ editor with modal keyboard controls, just like its parent, nimped.
 
 ## Management
 
-Run `./manage.sh` to see the help information. This script automates project
-build, installation, and uninstallation.
+Run `./manage` to see the help information. This script automates project build,
+installation, and uninstallation.
 
 ## Usage
 
