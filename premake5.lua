@@ -1,5 +1,5 @@
 workspace "nimped++"
-  configurations {"Debug", "Release"}
+  configurations {"debug", "release"}
   
   project "nimped++"
     kind "ConsoleApp"
@@ -14,13 +14,13 @@ workspace "nimped++"
     
     warnings "Extra"
     
-    filter "configurations:Debug"
-      runtime "Debug"
+    filter "configurations:debug"
+      runtime "debug"
       symbols "On"
       optimize "Off"
       sanitize "address"
     
-    filter "configurations:Release"
-      runtime "Release"
+    filter "configurations:release"
+      runtime "release"
       symbols "Off"
       optimize "Speed"
