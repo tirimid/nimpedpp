@@ -127,9 +127,9 @@ i32 ParseOptions()
 
 i32 ValidateOptions()
 {
-  if (g_Options.m_TabSpaces < 1)
+  if (g_Options.m_TabSize < 1)
   {
-    Error("Options: Invalid value for TabSpaces: %lld!", g_Options.m_TabSpaces);
+    Error("Options: Invalid value for TabSize: %lld!", g_Options.m_TabSize);
     return (1);
   }
   
